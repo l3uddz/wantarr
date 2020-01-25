@@ -53,7 +53,7 @@ func parseValidateInputs(args []string) error {
 	// init pvrObj
 	pvr, err = pvrObj.Get(pvrName, pvrConfig.Type, pvrConfig)
 	if err != nil {
-		return errors.Wrap(err, "failed loading pvr object")
+		return errors.WithMessage(err, "failed loading pvr object")
 	}
 
 	return nil
