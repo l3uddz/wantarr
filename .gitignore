@@ -1,0 +1,17 @@
+# misc
+/.idea/
+/.vscode/
+
+# configuration
+config.json
+*.db
+
+# vendor files
+/vendor/
+
+# dist folder
+/dist/
+
+# Web package
+web/rice-box.go
+web/trackarr-ui/package-lock.json
