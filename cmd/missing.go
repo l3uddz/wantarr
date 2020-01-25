@@ -3,14 +3,14 @@ package cmd
 import (
 	"fmt"
 	"github.com/l3uddz/wantarr/config"
+	pvrObj "github.com/l3uddz/wantarr/pvr"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tommysolsen/capitalise"
 )
 
 var (
 	maxQueueSize int
-	pvrName      string
-	pvrConfig    *config.Pvr
 )
 
 var missingCmd = &cobra.Command{
@@ -28,6 +28,8 @@ var missingCmd = &cobra.Command{
 
 		// do search
 		log.Infof("Searching missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
+
+		_ = pvr.GetWanted()
 	},
 }
 
@@ -38,13 +40,20 @@ func init() {
 }
 
 func parseValidateInputs(args []string) error {
-	ok := false
+	var ok bool = false
+	var err error = nil
 
 	// validate pvr exists in config
 	pvrName = args[0]
 	pvrConfig, ok = config.Config.Pvr[pvrName]
 	if !ok {
 		return fmt.Errorf("no pvr configuration found for: %q", pvrName)
+	}
+
+	// init pvrObj
+	pvr, err = pvrObj.Get(pvrName, pvrConfig.Type, pvrConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed loading pvr object")
 	}
 
 	return nil

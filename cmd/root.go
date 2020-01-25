@@ -5,6 +5,7 @@ import (
 	"github.com/l3uddz/wantarr/build"
 	"github.com/l3uddz/wantarr/config"
 	"github.com/l3uddz/wantarr/logger"
+	pvrObj "github.com/l3uddz/wantarr/pvr"
 	"github.com/l3uddz/wantarr/utils/paths"
 	stringutils "github.com/l3uddz/wantarr/utils/strings"
 	"github.com/sirupsen/logrus"
@@ -21,7 +22,11 @@ var (
 	flagCacheFile    = "cache.json"
 	flagLogFile      = "activity.log"
 
-	log *logrus.Entry
+	// Global vars
+	pvrName   string
+	pvrConfig *config.Pvr
+	pvr       pvrObj.Interface
+	log       *logrus.Entry
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -39,7 +44,6 @@ It will monitor the queue and respect any limits set via the configuration file.
 		log.Trace("Hi")
 	},
 }
-
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
