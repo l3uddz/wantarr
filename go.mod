@@ -13,6 +13,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.2
+	github.com/tommysolsen/capitalise v0.0.0-20171110170156-1df6e863d8ab
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )

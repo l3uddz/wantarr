@@ -13,7 +13,7 @@ import (
 )
 
 type Configuration struct {
-	Core CoreConfig
+	Pvr map[string]*Pvr
 }
 
 /* Vars */
@@ -109,8 +109,11 @@ func setConfigDefault(key string, value interface{}, check bool) int {
 func setConfigDefaults(check bool) error {
 	added := 0
 
+	// pvr settings
+	added += setConfigDefault("pvr", map[string]Pvr{}, check)
+
 	// core settings
-	added += setConfigDefault("core.workers", 8, check)
+	//added += setConfigDefault("core.workers", 8, check)
 
 	// were new settings added?
 	if check && added > 0 {
