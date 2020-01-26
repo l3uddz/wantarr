@@ -6,9 +6,15 @@ import (
 	"strings"
 )
 
+var (
+	pvrDefaultPageSize      = 1000
+	pvrDefaultSortKey       = "airDateUtc"
+	pvrDefaultSortDirection = "desc"
+)
+
 type Interface interface {
-	GetWanted() error
 	GetQueueSize() (int, error)
+	GetWantedMissing() error
 }
 
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {
