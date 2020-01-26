@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/l3uddz/wantarr/build"
 	"github.com/l3uddz/wantarr/config"
+	"github.com/l3uddz/wantarr/database"
 	"github.com/l3uddz/wantarr/logger"
 	pvrObj "github.com/l3uddz/wantarr/pvr"
 	"github.com/l3uddz/wantarr/utils/paths"
@@ -16,11 +17,12 @@ import (
 
 var (
 	// Global flags
-	flagLogLevel     int
+	flagLogLevel     = 0
 	flagConfigFolder = paths.GetCurrentBinaryPath()
 	flagConfigFile   = "config.yaml"
-	flagCacheFile    = "cache.json"
+	flagDatabaseFile = "vault.db"
 	flagLogFile      = "activity.log"
+	flagRefreshCache = false
 
 	// Global vars
 	pvrName   string
@@ -38,11 +40,6 @@ var rootCmd = &cobra.Command{
 Allows searching for missing / wanted media files (episodes/movies).
 It will monitor the queue and respect any limits set via the configuration file.
 `,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	Run: func(cmd *cobra.Command, args []string) {
-		log.Trace("Hi")
-	},
 }
 
 func Execute() {
@@ -56,11 +53,11 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Parse persistent flags
-	rootCmd.PersistentFlags().CountVarP(&flagLogLevel, "verbose", "v", "Verbose level")
 	rootCmd.PersistentFlags().StringVar(&flagConfigFolder, "config-dir", flagConfigFolder, "Config folder")
 	rootCmd.PersistentFlags().StringVarP(&flagConfigFile, "config", "c", flagConfigFile, "Config file")
-	rootCmd.PersistentFlags().StringVarP(&flagCacheFile, "cache", "d", flagCacheFile, "Cache file")
+	rootCmd.PersistentFlags().StringVarP(&flagDatabaseFile, "database", "d", flagDatabaseFile, "Database file")
 	rootCmd.PersistentFlags().StringVarP(&flagLogFile, "log", "l", flagLogFile, "Log file")
+	rootCmd.PersistentFlags().CountVarP(&flagLogLevel, "verbose", "v", "Verbose level")
 
 }
 
@@ -69,8 +66,8 @@ func initConfig() {
 	if !rootCmd.PersistentFlags().Changed("config") {
 		flagConfigFile = filepath.Join(flagConfigFolder, flagConfigFile)
 	}
-	if !rootCmd.PersistentFlags().Changed("cache") {
-		flagCacheFile = filepath.Join(flagConfigFolder, flagCacheFile)
+	if !rootCmd.PersistentFlags().Changed("database") {
+		flagDatabaseFile = filepath.Join(flagConfigFolder, flagDatabaseFile)
 	}
 	if !rootCmd.PersistentFlags().Changed("log") {
 		flagLogFile = filepath.Join(flagConfigFolder, flagLogFile)
@@ -90,5 +87,10 @@ func initConfig() {
 	// Init Config
 	if err := config.Init(flagConfigFile); err != nil {
 		log.WithError(err).Fatal("Failed to initialize config")
+	}
+
+	// Init Database
+	if err := database.Init(flagDatabaseFile); err != nil {
+		log.WithError(err).Fatal("Failed to initialize database")
 	}
 }

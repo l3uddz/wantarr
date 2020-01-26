@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/l3uddz/wantarr/config"
+	"github.com/l3uddz/wantarr/database"
 	pvrObj "github.com/l3uddz/wantarr/pvr"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -26,17 +27,27 @@ var missingCmd = &cobra.Command{
 			log.WithError(err).Fatal("Failed validating inputs")
 		}
 
-		// get missing
-		log.Infof("Searching missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
+		// retrieve missing records from pvr and store in database
+		if flagRefreshCache {
+			log.Infof("Retrieving missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
 
-		if qSize, err := pvr.GetQueueSize(); err != nil {
-			log.WithError(err).Error("Failed retrieving queued pvr items...")
-		} else {
-			log.WithField("size", qSize).Info("Refreshed download queue")
-		}
+			missingRecords, err := pvr.GetWantedMissing()
+			if err != nil {
+				log.WithError(err).Error("Failed retrieving wanted missing pvr items...")
+			}
 
-		if _, err := pvr.GetWantedMissing(); err != nil {
-			log.WithError(err).Error("Failed retrieving wanted missing pvr items...")
+			// store missing media in database
+			log.Info("Saving records to database...")
+
+			bucketName := fmt.Sprintf("%s_missing", pvrName)
+			for _, record := range missingRecords {
+				err := database.Db.Set(bucketName, record, nil)
+				if err != nil {
+					log.WithError(err).Errorf("Failed saving missing item in database for item: %v", record)
+				}
+			}
+			log.Info("Saved records to database")
+
 		}
 	},
 }
@@ -45,6 +56,7 @@ func init() {
 	rootCmd.AddCommand(missingCmd)
 
 	missingCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 5, "Exit when queue size reached.")
+	missingCmd.Flags().BoolVarP(&flagRefreshCache, "refresh-cache", "r", false, "Refresh the locally stored cache.")
 }
 
 func parseValidateInputs(args []string) error {
