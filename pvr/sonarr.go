@@ -100,11 +100,15 @@ func (p *Sonarr) GetQueueSize() (int, error) {
 
 func (p *Sonarr) GetWantedMissing() error {
 	// logic vars
-	page := 1
-	lastPageSize := pvrDefaultPageSize
+	totalRecords := 0
 	wantedMissing := make([]SonarrEpisode, 0)
 
+	page := 1
+	lastPageSize := pvrDefaultPageSize
+
 	// retrieve all page results
+	p.log.Info("Retrieving wanted missing...")
+
 	for {
 		// break loop when all pages retrieved
 		if lastPageSize < pvrDefaultPageSize {
@@ -143,15 +147,16 @@ func (p *Sonarr) GetWantedMissing() error {
 		// process response
 		lastPageSize = len(m.Records)
 		wantedMissing = append(wantedMissing, m.Records...)
+		totalRecords += lastPageSize
 
-		p.log.WithField("page", page).Info("Retrieved")
+		p.log.WithField("page", page).Debug("Retrieved")
 		page += 1
 
 		// close response
 		resp.Response().Body.Close()
 	}
 
-	p.log.WithField("records", len(wantedMissing)).Info("Finished")
+	p.log.WithField("records", totalRecords).Info("Finished")
 
 	return nil
 }
