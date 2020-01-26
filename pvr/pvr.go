@@ -14,7 +14,7 @@ var (
 
 type Interface interface {
 	GetQueueSize() (int, error)
-	GetWantedMissing() error
+	GetWantedMissing() ([]int, error)
 }
 
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {

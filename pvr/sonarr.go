@@ -98,10 +98,10 @@ func (p *Sonarr) GetQueueSize() (int, error) {
 	return q.Size, nil
 }
 
-func (p *Sonarr) GetWantedMissing() error {
+func (p *Sonarr) GetWantedMissing() ([]int, error) {
 	// logic vars
 	totalRecords := 0
-	wantedMissing := make([]SonarrEpisode, 0)
+	wantedMissing := make([]int, 0)
 
 	page := 1
 	lastPageSize := pvrDefaultPageSize
@@ -127,13 +127,13 @@ func (p *Sonarr) GetWantedMissing() error {
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
 			p.reqHeaders, params)
 		if err != nil {
-			return errors.WithMessage(err, "failed retrieving wanted missing api response from sonarr")
+			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from sonarr")
 		}
 
 		// validate response
 		if resp.Response().StatusCode != 200 {
 			resp.Response().Body.Close()
-			return fmt.Errorf("failed retrieving valid wantedm issing api response from sonarr: %s",
+			return nil, fmt.Errorf("failed retrieving valid wantedm issing api response from sonarr: %s",
 				resp.Response().Status)
 		}
 
@@ -141,12 +141,14 @@ func (p *Sonarr) GetWantedMissing() error {
 		var m SonarrWanted
 		if err := resp.ToJSON(&m); err != nil {
 			resp.Response().Body.Close()
-			return errors.WithMessage(err, "failed decoding wanted missing api response from sonarr")
+			return nil, errors.WithMessage(err, "failed decoding wanted missing api response from sonarr")
 		}
 
 		// process response
 		lastPageSize = len(m.Records)
-		wantedMissing = append(wantedMissing, m.Records...)
+		for _, item := range m.Records {
+			wantedMissing = append(wantedMissing, item.EpisodeFileId)
+		}
 		totalRecords += lastPageSize
 
 		p.log.WithField("page", page).Debug("Retrieved")
@@ -158,5 +160,5 @@ func (p *Sonarr) GetWantedMissing() error {
 
 	p.log.WithField("records", totalRecords).Info("Finished")
 
-	return nil
+	return wantedMissing, nil
 }

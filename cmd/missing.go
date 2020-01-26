@@ -26,7 +26,7 @@ var missingCmd = &cobra.Command{
 			log.WithError(err).Fatal("Failed validating inputs")
 		}
 
-		// do search
+		// get missing
 		log.Infof("Searching missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
 
 		if qSize, err := pvr.GetQueueSize(); err != nil {
@@ -35,7 +35,7 @@ var missingCmd = &cobra.Command{
 			log.WithField("size", qSize).Info("Refreshed download queue")
 		}
 
-		if err := pvr.GetWantedMissing(); err != nil {
+		if _, err := pvr.GetWantedMissing(); err != nil {
 			log.WithError(err).Error("Failed retrieving wanted missing pvr items...")
 		}
 	},
