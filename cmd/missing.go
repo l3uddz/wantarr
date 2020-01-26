@@ -30,6 +30,11 @@ var missingCmd = &cobra.Command{
 		log.Infof("Searching missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
 
 		_ = pvr.GetWanted()
+		if qSize, err := pvr.GetQueueSize(); err != nil {
+			log.WithError(err).Error("Failed retrieving queued pvr items...")
+		} else {
+			log.WithField("size", qSize).Info("Refreshed download queue")
+		}
 	},
 }
 

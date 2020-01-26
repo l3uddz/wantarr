@@ -8,6 +8,7 @@ import (
 
 type Interface interface {
 	GetWanted() error
+	GetQueueSize() (int, error)
 }
 
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {
