@@ -1,34 +1,63 @@
 package database
 
 import (
-	"github.com/asdine/storm/v3"
+	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/l3uddz/wantarr/logger"
-	stringutils "github.com/l3uddz/wantarr/utils/strings"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 var (
-	log           = logger.GetLogger("db")
-	Db  *storm.DB = nil
+	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
-func Init(databasePath string) error {
-	if db, err := storm.Open(databasePath); err != nil {
-		return errors.Wrapf(err, "failed opening database: %q", databasePath)
-	} else {
-		Db = db
-	}
-
-	log.Infof("Using %s = %q", stringutils.StringLeftJust("DATABASE", " ", 10), databasePath)
-	return nil
+type Database struct {
+	// private
+	filePath string
+	log      *logrus.Entry
+	vault    map[int]*time.Time
+	changed  bool
+	loaded   bool
 }
 
-func Close() {
-	if Db == nil {
-		return
+func New(name string, databaseFolder string) (*Database, error) {
+	db := &Database{
+		filePath: filepath.Join(databaseFolder, fmt.Sprintf("%s.json", name)),
+		log:      logger.GetLogger(fmt.Sprintf("db.%s", name)),
+		vault:    make(map[int]*time.Time, 0),
+		changed:  false,
+		loaded:   false,
 	}
 
-	if err := Db.Close(); err != nil {
-		log.WithError(err).Error("failed closing database gracefully...")
+	// does database file already exist?
+	if _, err := os.Stat(db.filePath); os.IsNotExist(err) {
+		return db, nil
 	}
+
+	// open database file
+	dbFile, err := os.Open(db.filePath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed loading database file: %q", db.filePath)
+	}
+	defer dbFile.Close()
+
+	// read database data
+	dbData, err := ioutil.ReadAll(dbFile)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed reading bytes from database file: %q", db.filePath)
+	}
+
+	// unmarshal cache data
+	if err := json.Unmarshal(dbData, &db.vault); err != nil {
+		return nil, errors.Wrapf(err, "failed to unmarshal bytes from database file: %q", db.filePath)
+	}
+
+	db.loaded = true
+
+	return db, nil
 }

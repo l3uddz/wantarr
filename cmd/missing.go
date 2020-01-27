@@ -27,8 +27,21 @@ var missingCmd = &cobra.Command{
 			log.WithError(err).Fatal("Failed validating inputs")
 		}
 
+		// load database
+		db, err := database.New(pvrName, flagConfigFolder)
+		if err != nil {
+			log.WithError(err).Fatal("Failed initializing database file...")
+		}
+
+		// close database on finish
+		defer func() {
+			if err := db.Close(); err != nil {
+				log.WithError(err).Error("Failed closing database gracefully...")
+			}
+		}()
+
 		// retrieve missing records from pvr and store in database
-		if flagRefreshCache {
+		if flagRefreshCache || !db.FromDisk() {
 			log.Infof("Retrieving missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
 
 			missingRecords, err := pvr.GetWantedMissing()
@@ -39,13 +52,12 @@ var missingCmd = &cobra.Command{
 			// store missing media in database
 			log.Info("Saving records to database...")
 
-			bucketName := fmt.Sprintf("%s_missing", pvrName)
 			for _, record := range missingRecords {
-				err := database.Db.Set(bucketName, record, nil)
-				if err != nil {
-					log.WithError(err).Errorf("Failed saving missing item in database for item: %v", record)
+				if err := db.Set(record, nil); err != nil {
+					log.WithError(err).Errorf("Failed storing mediaItem %q in database", record)
 				}
 			}
+
 			log.Info("Saved records to database")
 
 		}

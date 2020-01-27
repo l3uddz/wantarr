@@ -33,7 +33,7 @@ type SonarrSeries struct {
 }
 type SonarrEpisode struct {
 	Title         string
-	EpisodeFileId int
+	Id            int
 	SeasonNumber  int
 	EpisodeNumber int
 	AirDateUtc    time.Time
@@ -147,7 +147,7 @@ func (p *Sonarr) GetWantedMissing() ([]int, error) {
 		// process response
 		lastPageSize = len(m.Records)
 		for _, item := range m.Records {
-			wantedMissing = append(wantedMissing, item.EpisodeFileId)
+			wantedMissing = append(wantedMissing, item.Id)
 		}
 		totalRecords += lastPageSize
 
