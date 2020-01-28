@@ -5,10 +5,10 @@ import (
 )
 
 func (d *Database) Set(mediaId int, mediaItem *pvr.MediaItem, keepLastSearch bool) error {
-	var definitiveMediaItem *pvr.MediaItem = mediaItem
+	definitiveMediaItem := mediaItem
 
+	// does this media item already exist?
 	if keepLastSearch {
-		// does this media item already exist?
 		if existingMediaItem, ok := d.vault[mediaId]; ok {
 			definitiveMediaItem = &pvr.MediaItem{
 				AirDateUtc: mediaItem.AirDateUtc,
@@ -18,6 +18,7 @@ func (d *Database) Set(mediaId int, mediaItem *pvr.MediaItem, keepLastSearch boo
 		}
 	}
 
+	// set item in vault
 	d.vault[mediaId] = *definitiveMediaItem
 	d.changed = true
 	return nil
