@@ -12,3 +12,7 @@ func (d *Database) Get(mediaId int) (*pvr.MediaItem, error) {
 	}
 	return &mediaItem, nil
 }
+
+func (d *Database) GetVault() *map[int]pvr.MediaItem {
+	return &d.vault
+}

@@ -59,6 +59,22 @@ var missingCmd = &cobra.Command{
 			}
 
 			log.Info("Stored records to database")
+
+			// remove media no longer missing
+			if db.FromDisk() {
+				log.Info("Removing records from database that are no longer missing...")
+
+				removedRecords := 0
+				for itemId, _ := range *db.GetVault() {
+					if _, itemStillMissing := missingRecords[itemId]; !itemStillMissing {
+						// this item is no longer missing
+						db.Delete(itemId)
+						removedRecords += 1
+					}
+				}
+
+				log.Infof("Removed %d records from database that are no longer missing!", removedRecords)
+			}
 		}
 
 		// start queue monitor
