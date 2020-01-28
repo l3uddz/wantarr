@@ -22,7 +22,6 @@ var missingCmd = &cobra.Command{
 
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
 		// validate inputs
 		if err := parseValidateInputs(args); err != nil {
 			log.WithError(err).Fatal("Failed validating inputs")
@@ -41,40 +40,36 @@ var missingCmd = &cobra.Command{
 			}
 		}()
 
-		// retrieve missing records from pvr and store in database
+		// retrieve missing records from pvr and stash in database
 		if flagRefreshCache || !db.FromDisk() {
-			log.Infof("Retrieving missing media in %s named: %q", capitalise.First(pvrConfig.Type), pvrName)
+			log.Infof("Retrieving missing media from %s: %q", capitalise.First(pvrConfig.Type), pvrName)
 
 			missingRecords, err := pvr.GetWantedMissing()
 			if err != nil {
-				log.WithError(err).Error("Failed retrieving wanted missing pvr items...")
+				log.WithError(err).Fatal("Failed retrieving wanted missing pvr items...")
 			}
 
-			// store missing media in database
-			log.Info("Storing records in database...")
+			// stash missing media in database
+			log.Debug("Stashing media items in database...")
 
 			for itemId, record := range missingRecords {
 				if err := db.Set(itemId, &record, true); err != nil {
-					log.WithError(err).Errorf("Failed storing mediaItem %q in database", record)
+					log.WithError(err).Errorf("Failed stashing mediaItem %q in database", record)
 				}
 			}
 
-			log.Info("Stored records to database")
+			log.Info("Stashed media items in database")
 
 			// remove media no longer missing
 			if db.FromDisk() {
-				log.Info("Removing records from database that are no longer missing...")
+				log.Debug("Removing records from database that are no longer missing...")
 
-				removedRecords := 0
-				for itemId, _ := range *db.GetVault() {
-					if _, itemStillMissing := missingRecords[itemId]; !itemStillMissing {
-						// this item is no longer missing
-						db.Delete(itemId)
-						removedRecords += 1
-					}
+				removedItems, err := db.RemoveMissingMediaItems(missingRecords)
+				if err != nil {
+					log.WithError(err).Error("Failed removing items from database that are no longer missing")
 				}
 
-				log.Infof("Removed %d records from database that are no longer missing!", removedRecords)
+				log.Infof("Removed %d records from database that are no longer missing!", removedItems)
 			}
 		}
 
