@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tommysolsen/capitalise"
+	"strings"
 )
 
 var (
@@ -28,7 +29,7 @@ var missingCmd = &cobra.Command{
 		}
 
 		// load database
-		db, err := database.New(pvrName, "missing", flagConfigFolder)
+		db, err := database.New(strings.ToLower(pvrName), "missing", flagConfigFolder)
 		if err != nil {
 			log.WithError(err).Fatal("Failed initializing database file...")
 		}
