@@ -5,6 +5,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/l3uddz/wantarr/logger"
 	"github.com/l3uddz/wantarr/pvr"
+	stringutils "github.com/l3uddz/wantarr/utils/strings"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 
 var (
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
+	log = logger.GetLogger("db")
 )
 
 type Database struct {
@@ -33,6 +35,9 @@ func New(name string, suffix string, databaseFolder string) (*Database, error) {
 		changed:  false,
 		loaded:   false,
 	}
+
+	// show log
+	log.Infof("Using %s = %q", stringutils.StringLeftJust("DATABASE", " ", 10), db.filePath)
 
 	// does database file already exist?
 	if _, err := os.Stat(db.filePath); os.IsNotExist(err) {
