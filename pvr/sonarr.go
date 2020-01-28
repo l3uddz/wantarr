@@ -164,7 +164,7 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 		resp.Response().Body.Close()
 	}
 
-	p.log.WithField("records", totalRecords).Info("Finished")
+	p.log.WithField("media_items", totalRecords).Info("Finished")
 
 	return wantedMissing, nil
 }
