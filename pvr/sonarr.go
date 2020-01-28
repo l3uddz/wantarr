@@ -101,7 +101,7 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 	lastPageSize := pvrDefaultPageSize
 
 	// retrieve all page results
-	p.log.Info("Retrieving wanted missing...")
+	p.log.Info("Retrieving wanted missing media...")
 
 	for {
 		// break loop when all pages retrieved

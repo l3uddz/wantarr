@@ -67,9 +67,9 @@ var missingCmd = &cobra.Command{
 				removedItems, err := db.RemoveMissingMediaItems(missingRecords)
 				if err != nil {
 					log.WithError(err).Error("Failed removing items from database that are no longer missing")
+				} else {
+					log.Infof("Removed %d records from database that are no longer missing!", removedItems)
 				}
-
-				log.Infof("Removed %d records from database that are no longer missing!", removedItems)
 			}
 		}
 
