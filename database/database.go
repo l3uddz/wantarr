@@ -25,9 +25,9 @@ type Database struct {
 	loaded   bool
 }
 
-func New(name string, databaseFolder string) (*Database, error) {
+func New(name string, suffix string, databaseFolder string) (*Database, error) {
 	db := &Database{
-		filePath: filepath.Join(databaseFolder, fmt.Sprintf("%s.json", name)),
+		filePath: filepath.Join(databaseFolder, fmt.Sprintf("%s_%s.json", name, suffix)),
 		log:      logger.GetLogger(fmt.Sprintf("db.%s", name)),
 		vault:    make(map[int]pvr.MediaItem, 0),
 		changed:  false,

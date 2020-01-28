@@ -28,7 +28,7 @@ var missingCmd = &cobra.Command{
 		}
 
 		// load database
-		db, err := database.New(pvrName, flagConfigFolder)
+		db, err := database.New(pvrName, "missing", flagConfigFolder)
 		if err != nil {
 			log.WithError(err).Fatal("Failed initializing database file...")
 		}
