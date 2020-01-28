@@ -52,8 +52,8 @@ var missingCmd = &cobra.Command{
 			// store missing media in database
 			log.Info("Saving records to database...")
 
-			for _, record := range missingRecords {
-				if err := db.Set(record, nil); err != nil {
+			for itemId, record := range missingRecords {
+				if err := db.Set(itemId, &record); err != nil {
 					log.WithError(err).Errorf("Failed storing mediaItem %q in database", record)
 				}
 			}

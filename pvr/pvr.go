@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/l3uddz/wantarr/config"
 	"strings"
+	"time"
 )
 
 var (
@@ -12,10 +13,18 @@ var (
 	pvrDefaultSortDirection = "desc"
 )
 
+type MediaItem struct {
+	AirDateUtc *time.Time
+	LastSearch *time.Time
+	Name       string
+}
+
 type Interface interface {
 	GetQueueSize() (int, error)
-	GetWantedMissing() ([]int, error)
+	GetWantedMissing() (map[int]MediaItem, error)
 }
+
+/* Public */
 
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {
 

@@ -25,12 +25,6 @@ type SonarrQueue struct {
 	Size int `json:"totalRecords"`
 }
 
-type SonarrSeries struct {
-	Title     string
-	TvdbId    int
-	TvRageId  int
-	Monitored bool
-}
 type SonarrEpisode struct {
 	Title         string
 	Id            int
@@ -98,10 +92,10 @@ func (p *Sonarr) GetQueueSize() (int, error) {
 	return q.Size, nil
 }
 
-func (p *Sonarr) GetWantedMissing() ([]int, error) {
+func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 	// logic vars
 	totalRecords := 0
-	wantedMissing := make([]int, 0)
+	wantedMissing := make(map[int]MediaItem, 0)
 
 	page := 1
 	lastPageSize := pvrDefaultPageSize
@@ -146,8 +140,20 @@ func (p *Sonarr) GetWantedMissing() ([]int, error) {
 
 		// process response
 		lastPageSize = len(m.Records)
-		for _, item := range m.Records {
-			wantedMissing = append(wantedMissing, item.Id)
+		for _, episode := range m.Records {
+			// skip unmonitored episode
+			if !episode.Monitored {
+				continue
+			}
+
+			// store this episode
+			airDate := episode.AirDateUtc
+			wantedMissing[episode.Id] = MediaItem{
+				AirDateUtc: &airDate,
+				LastSearch: nil,
+				Name: fmt.Sprintf("%s - S%02dE%02d", episode.Title, episode.SeasonNumber,
+					episode.EpisodeNumber),
+			}
 		}
 		totalRecords += lastPageSize
 

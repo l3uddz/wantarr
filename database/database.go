@@ -4,12 +4,12 @@ import (
 	"fmt"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/l3uddz/wantarr/logger"
+	"github.com/l3uddz/wantarr/pvr"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 var (
@@ -20,7 +20,7 @@ type Database struct {
 	// private
 	filePath string
 	log      *logrus.Entry
-	vault    map[int]*time.Time
+	vault    map[int]pvr.MediaItem
 	changed  bool
 	loaded   bool
 }
@@ -29,7 +29,7 @@ func New(name string, databaseFolder string) (*Database, error) {
 	db := &Database{
 		filePath: filepath.Join(databaseFolder, fmt.Sprintf("%s.json", name)),
 		log:      logger.GetLogger(fmt.Sprintf("db.%s", name)),
-		vault:    make(map[int]*time.Time, 0),
+		vault:    make(map[int]pvr.MediaItem, 0),
 		changed:  false,
 		loaded:   false,
 	}
