@@ -20,6 +20,7 @@ type MediaItem struct {
 }
 
 type Interface interface {
+	Init() error
 	GetQueueSize() (int, error)
 	GetWantedMissing() (map[int]MediaItem, error)
 }

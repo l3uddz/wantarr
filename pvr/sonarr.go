@@ -19,6 +19,7 @@ type Sonarr struct {
 	log        *logrus.Entry
 	apiUrl     string
 	reqHeaders req.Header
+	version    int
 }
 
 type SonarrQueue struct {
@@ -41,6 +42,10 @@ type SonarrWanted struct {
 	SortDirection string
 	TotalRecords  int
 	Records       []SonarrEpisode
+}
+
+type SonarrSystemStatus struct {
+	Version string
 }
 
 /* Initializer */
@@ -67,7 +72,51 @@ func NewSonarr(name string, c *config.Pvr) *Sonarr {
 	}
 }
 
+/* Private */
+
+func (p *Sonarr) getSystemStatus() (*SonarrSystemStatus, error) {
+	// send request
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders)
+	if err != nil {
+		return nil, errors.New("failed retrieving system status api response from sonarr")
+	}
+	defer resp.Response().Body.Close()
+
+	// validate response
+	if resp.Response().StatusCode != 200 {
+		return nil, fmt.Errorf("failed retrieving valid system status api response from sonarr: %s",
+			resp.Response().Status)
+	}
+
+	// decode response
+	var s SonarrSystemStatus
+	if err := resp.ToJSON(&s); err != nil {
+		return nil, errors.WithMessage(err, "failed decoding system status api response from sonarr")
+	}
+
+	return &s, nil
+}
+
 /* Interface Implements */
+
+func (p *Sonarr) Init() error {
+	// retrieve system status
+	status, err := p.getSystemStatus()
+	if err != nil {
+		return errors.Wrap(err, "failed initializing sonarr pvr")
+	}
+
+	// determine version
+	switch status.Version[0:1] {
+	case "2":
+		p.version = 2
+	case "3":
+		p.version = 3
+	default:
+		return errors.New("failed to determine version of sonarr pvr")
+	}
+	return nil
+}
 
 func (p *Sonarr) GetQueueSize() (int, error) {
 	// send request
