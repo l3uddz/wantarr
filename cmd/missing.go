@@ -27,6 +27,11 @@ var missingCmd = &cobra.Command{
 			log.WithError(err).Fatal("Failed validating inputs")
 		}
 
+		// init pvr object
+		if err := pvr.Init(); err != nil {
+			log.WithError(err).Fatalf("Failed initializing pvr object for: %s", pvrName)
+		}
+
 		// load database
 		db, err := database.New(strings.ToLower(pvrName), "missing", flagConfigFolder)
 		if err != nil {
@@ -102,10 +107,6 @@ func parseValidateInputs(args []string) error {
 	pvr, err = pvrObj.Get(pvrName, pvrConfig.Type, pvrConfig)
 	if err != nil {
 		return errors.WithMessage(err, "failed loading pvr object")
-	}
-
-	if err := pvr.Init(); err != nil {
-		log.WithError(err).Fatalf("Failed initializing pvr object for: %s", pvrName)
 	}
 
 	return nil
