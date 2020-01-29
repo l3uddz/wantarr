@@ -109,7 +109,7 @@ func (p *Sonarr) Init() error {
 	// determine version
 	switch status.Version[0:1] {
 	case "2":
-		p.version = 2
+		return errors.New("unsupported sonarr version")
 	case "3":
 		p.version = 3
 	default:
