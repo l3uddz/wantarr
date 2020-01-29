@@ -105,7 +105,7 @@ func parseValidateInputs(args []string) error {
 	}
 
 	if err := pvr.Init(); err != nil {
-		log.WithError(err).Fatal("Failed initializing pvr object for: %s", pvrName)
+		log.WithError(err).Fatalf("Failed initializing pvr object for: %s", pvrName)
 	}
 
 	return nil
