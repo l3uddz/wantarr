@@ -14,8 +14,8 @@ var (
 )
 
 type MediaItem struct {
-	AirDateUtc *time.Time
-	LastSearch *time.Time
+	AirDateUtc time.Time
+	LastSearch time.Time
 	Name       string
 }
 
@@ -23,6 +23,7 @@ type Interface interface {
 	Init() error
 	GetQueueSize() (int, error)
 	GetWantedMissing() (map[int]MediaItem, error)
+	SearchMediaItems([]int) (bool, error)
 }
 
 /* Public */

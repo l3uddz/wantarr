@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tommysolsen/capitalise"
 	"strings"
+	"time"
 )
 
 var (
@@ -82,6 +83,43 @@ var missingCmd = &cobra.Command{
 		// start queue monitor
 
 		// start searching
+		pos := 0
+		var searchItemIds []int
+		searchItems := make(map[int]pvrObj.MediaItem, 0)
+
+		for itemId, item := range *db.GetVault() {
+			if !item.LastSearch.IsZero() {
+				continue
+			}
+
+			if pos > 9 {
+				break
+			} else {
+				pos++
+			}
+
+			itm := item
+			searchItems[itemId] = itm
+			searchItemIds = append(searchItemIds, itemId)
+		}
+
+		log.Info("Searching")
+		log.Info(searchItemIds)
+
+		ok, err := pvr.SearchMediaItems(searchItemIds)
+		if err != nil {
+			log.WithError(err).Fatal("Failed searching for items")
+		} else if !ok {
+			log.Error("Failed searching for items!")
+		} else {
+			log.Info("Searched for items!")
+
+			for itemId, item := range searchItems {
+				item.LastSearch = time.Now().UTC()
+				_ = db.Set(itemId, &item, false)
+			}
+		}
+
 	},
 }
 

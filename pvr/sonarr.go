@@ -56,6 +56,15 @@ type SonarrCommandStatus struct {
 	Status  string
 }
 
+type SonarrCommandResponse struct {
+	Id int
+}
+
+type SonarrEpisodeSearch struct {
+	Name     string `json:"name"`
+	Episodes []int  `json:"episodeIds"`
+}
+
 /* Initializer */
 
 func NewSonarr(name string, c *config.Pvr) *Sonarr {
@@ -105,9 +114,10 @@ func (p *Sonarr) getSystemStatus() (*SonarrSystemStatus, error) {
 	return &s, nil
 }
 
-func (p *Sonarr) getCommandStatus(id string) (*SonarrCommandStatus, error) {
+func (p *Sonarr) getCommandStatus(id int) (*SonarrCommandStatus, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/api/command/"+id), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), 15,
+		p.reqHeaders)
 	if err != nil {
 		return nil, errors.New("failed retrieving command status api response from sonarr")
 	}
@@ -231,8 +241,8 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 			// store this episode
 			airDate := episode.AirDateUtc
 			wantedMissing[episode.Id] = MediaItem{
-				AirDateUtc: &airDate,
-				LastSearch: nil,
+				AirDateUtc: airDate,
+				LastSearch: time.Time{},
 				Name: fmt.Sprintf("%s - S%02dE%02d", episode.Title, episode.SeasonNumber,
 					episode.EpisodeNumber),
 			}
@@ -249,4 +259,57 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 	p.log.WithField("media_items", totalRecords).Info("Finished")
 
 	return wantedMissing, nil
+}
+
+func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
+	// set request data
+	payload := SonarrEpisodeSearch{
+		Name:     "EpisodeSearch",
+		Episodes: mediaItemIds,
+	}
+
+	// send request
+	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), 15, p.reqHeaders,
+		req.BodyJSON(&payload))
+	if err != nil {
+		return false, errors.WithMessage(err, "failed retrieving command api response from sonarr")
+	}
+	defer resp.Response().Body.Close()
+
+	// validate response
+	if resp.Response().StatusCode != 201 {
+		return false, fmt.Errorf("failed retrieving valid command api response from sonarr: %s",
+			resp.Response().Status)
+	}
+
+	// decode response
+	var q SonarrCommandResponse
+	if err := resp.ToJSON(&q); err != nil {
+		return false, errors.WithMessage(err, "failed decoding command api response from sonarr")
+	}
+
+	// monitor search status
+	p.log.WithField("command_id", q.Id).Info("Monitoring search status")
+
+	for {
+		// retrieve command status
+		searchStatus, err := p.getCommandStatus(q.Id)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed retrieving command status from sonarr for: %d", q.Id)
+		}
+
+		p.log.WithFields(logrus.Fields{
+			"command_id": q.Id,
+			"status":     searchStatus.Status,
+		}).Debug("Status retrieved")
+
+		// is status complete?
+		if searchStatus.Status == "completed" {
+			break
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+
+	return true, nil
 }
