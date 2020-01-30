@@ -57,13 +57,13 @@ var missingCmd = &cobra.Command{
 			// stash missing media in database
 			log.Debug("Stashing media items in database...")
 
-			for itemId, record := range missingRecords {
-				if err := db.Set(itemId, &record, true); err != nil {
-					log.WithError(err).Errorf("Failed stashing mediaItem %q in database", record)
-				}
+			newItems, err := db.SetMediaItems(missingRecords)
+			if err != nil {
+				log.WithError(err).Errorf("Failed stashing media items in database...")
+				return
 			}
 
-			log.Info("Stashed media items in database")
+			log.WithField("new_media_items", newItems).Info("Stashed media items in database")
 
 			// remove media no longer missing
 			if db.FromDisk() {
