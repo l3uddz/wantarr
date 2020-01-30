@@ -48,6 +48,14 @@ type SonarrSystemStatus struct {
 	Version string
 }
 
+type SonarrCommandStatus struct {
+	Name    string
+	Message string
+	Started time.Time
+	Ended   time.Time
+	Status  string
+}
+
 /* Initializer */
 
 func NewSonarr(name string, c *config.Pvr) *Sonarr {
@@ -92,6 +100,29 @@ func (p *Sonarr) getSystemStatus() (*SonarrSystemStatus, error) {
 	var s SonarrSystemStatus
 	if err := resp.ToJSON(&s); err != nil {
 		return nil, errors.WithMessage(err, "failed decoding system status api response from sonarr")
+	}
+
+	return &s, nil
+}
+
+func (p *Sonarr) getCommandStatus(id string) (*SonarrCommandStatus, error) {
+	// send request
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/api/command/"+id), 15, p.reqHeaders)
+	if err != nil {
+		return nil, errors.New("failed retrieving command status api response from sonarr")
+	}
+	defer resp.Response().Body.Close()
+
+	// validate response
+	if resp.Response().StatusCode != 200 {
+		return nil, fmt.Errorf("failed retrieving valid command status api response from sonarr: %s",
+			resp.Response().Status)
+	}
+
+	// decode response
+	var s SonarrCommandStatus
+	if err := resp.ToJSON(&s); err != nil {
+		return nil, errors.WithMessage(err, "failed decoding command status api response from sonarr")
 	}
 
 	return &s, nil
