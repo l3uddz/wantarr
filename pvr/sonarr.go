@@ -180,6 +180,13 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 	page := 1
 	lastPageSize := pvrDefaultPageSize
 
+	// set params
+	params := req.QueryParam{
+		"sortKey":  pvrDefaultSortKey,
+		"sortDir":  pvrDefaultSortDirection,
+		"pageSize": pvrDefaultPageSize,
+	}
+
 	// retrieve all page results
 	p.log.Info("Retrieving wanted missing media...")
 
@@ -189,13 +196,8 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 			break
 		}
 
-		// set params
-		params := req.QueryParam{
-			"sortKey":  pvrDefaultSortKey,
-			"sortDir":  pvrDefaultSortDirection,
-			"page":     page,
-			"pageSize": pvrDefaultPageSize,
-		}
+		// set page
+		params["page"] = page
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
