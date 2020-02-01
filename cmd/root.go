@@ -24,10 +24,11 @@ var (
 	flagRefreshCache = false
 
 	// Global vars
-	pvrName   string
-	pvrConfig *config.Pvr
-	pvr       pvrObj.Interface
-	log       *logrus.Entry
+	pvrName      string
+	lowerPvrName string
+	pvrConfig    *config.Pvr
+	pvr          pvrObj.Interface
+	log          *logrus.Entry
 )
 
 // rootCmd represents the base command when called without any subcommands

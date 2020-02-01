@@ -39,7 +39,8 @@ var missingCmd = &cobra.Command{
 		defer database.Close()
 
 		// retrieve missing records from pvr and stash in database
-		if flagRefreshCache {
+		existingItemsCount := database.GetItemsCount(lowerPvrName, "missing")
+		if flagRefreshCache || existingItemsCount < 1 {
 			log.Infof("Retrieving missing media from %s: %q", capitalise.First(pvrConfig.Type), pvrName)
 
 			missingRecords, err := pvr.GetWantedMissing()
@@ -50,22 +51,24 @@ var missingCmd = &cobra.Command{
 			// stash missing media in database
 			log.Debug("Stashing media items in database...")
 
-			if err := database.SetMediaItems(strings.ToLower(pvrName), "missing", missingRecords); err != nil {
+			if err := database.SetMediaItems(lowerPvrName, "missing", missingRecords); err != nil {
 				log.WithError(err).Fatal("Failed stashing media items in database")
 			}
 
 			log.Info("Stashed media items")
 
 			// remove media no longer missing
-			log.Debug("Removing media items from database that are no longer missing...")
+			if existingItemsCount >= 1 {
+				log.Debug("Removing media items from database that are no longer missing...")
 
-			removedItems, err := database.DeleteMissingItems(strings.ToLower(pvrName), "missing", missingRecords)
-			if err != nil {
-				log.WithError(err).Fatal("Failed removing media items from database that are no longer missing...")
+				removedItems, err := database.DeleteMissingItems(lowerPvrName, "missing", missingRecords)
+				if err != nil {
+					log.WithError(err).Fatal("Failed removing media items from database that are no longer missing...")
+				}
+
+				log.WithField("removed_items", removedItems).
+					Info("Removed media items from database that are no longer missing")
 			}
-
-			log.WithField("removed_items", removedItems).
-				Info("Removed media items from database that are no longer missing")
 
 			//if err := database.SetMediaItems(pvrName, "missing", missingRecords); err != nil {
 			//	log.WithError(err).Fatal("Failed stashing media items in database...")
@@ -149,6 +152,7 @@ func parseValidateInputs(args []string) error {
 
 	// validate pvr exists in config
 	pvrName = args[0]
+	lowerPvrName = strings.ToLower(pvrName)
 	pvrConfig, ok = config.Config.Pvr[pvrName]
 	if !ok {
 		return fmt.Errorf("no pvr configuration found for: %q", pvrName)
