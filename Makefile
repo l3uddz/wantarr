@@ -55,7 +55,7 @@ build: fetch ${BUILD_PATH}/${CMD} ## Build application
 ${BUILD_PATH}/${CMD}: ${GO_FILES} go.sum
 	@echo "Building for ${TARGET}..." && \
 	mkdir -p ${BUILD_PATH} && \
-	CGO_ENABLED=0 go build \
+	CGO_ENABLED=1 go build \
 		-mod vendor \
 		-trimpath \
 		-ldflags "-s -w -X github.com/l3uddz/wantarr/build.Version=0.0.0-dev -X github.com/l3uddz/wantarr/build.GitCommit=${GIT_COMMIT} -X github.com/l3uddz/wantarr/build.Timestamp=${TIMESTAMP}" \

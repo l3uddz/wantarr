@@ -19,6 +19,7 @@ var (
 	flagLogLevel     = 0
 	flagConfigFolder = paths.GetCurrentBinaryPath()
 	flagConfigFile   = "config.yaml"
+	flagDatabaseFile = "vault.db"
 	flagLogFile      = "activity.log"
 	flagRefreshCache = false
 
@@ -53,6 +54,7 @@ func init() {
 	// Parse persistent flags
 	rootCmd.PersistentFlags().StringVar(&flagConfigFolder, "config-dir", flagConfigFolder, "Config folder")
 	rootCmd.PersistentFlags().StringVarP(&flagConfigFile, "config", "c", flagConfigFile, "Config file")
+	rootCmd.PersistentFlags().StringVarP(&flagDatabaseFile, "database", "d", flagDatabaseFile, "Database file")
 	rootCmd.PersistentFlags().StringVarP(&flagLogFile, "log", "l", flagLogFile, "Log file")
 	rootCmd.PersistentFlags().CountVarP(&flagLogLevel, "verbose", "v", "Verbose level")
 
@@ -62,6 +64,9 @@ func initConfig() {
 	// Set core variables
 	if !rootCmd.PersistentFlags().Changed("config") {
 		flagConfigFile = filepath.Join(flagConfigFolder, flagConfigFile)
+	}
+	if !rootCmd.PersistentFlags().Changed("database") {
+		flagDatabaseFile = filepath.Join(flagConfigFolder, flagDatabaseFile)
 	}
 	if !rootCmd.PersistentFlags().Changed("log") {
 		flagLogFile = filepath.Join(flagConfigFolder, flagLogFile)

@@ -182,10 +182,10 @@ func (p *Sonarr) GetQueueSize() (int, error) {
 	return q.Size, nil
 }
 
-func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
+func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 	// logic vars
 	totalRecords := 0
-	wantedMissing := make(map[int]MediaItem, 0)
+	var wantedMissing []MediaItem
 
 	page := 1
 	lastPageSize := pvrDefaultPageSize
@@ -240,12 +240,13 @@ func (p *Sonarr) GetWantedMissing() (map[int]MediaItem, error) {
 
 			// store this episode
 			airDate := episode.AirDateUtc
-			wantedMissing[episode.Id] = MediaItem{
+			wantedMissing = append(wantedMissing, MediaItem{
+				ItemId:     episode.Id,
 				AirDateUtc: airDate,
 				LastSearch: time.Time{},
 				Name: fmt.Sprintf("%s - S%02dE%02d", episode.Title, episode.SeasonNumber,
 					episode.EpisodeNumber),
-			}
+			})
 		}
 		totalRecords += lastPageSize
 
