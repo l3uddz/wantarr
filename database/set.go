@@ -18,12 +18,7 @@ func SetMediaItems(pvrName string, wantedType string, mediaItems []pvr.MediaItem
 			AirDateUtc: item.AirDateUtc,
 		}
 
-		// update items last search if available
-		if !item.LastSearch.IsZero() {
-			mediaItem.LastSearchDateUtc = &item.LastSearch
-		}
-
-		// create or update media item
+		// create item if not exists
 		err := tx.Where(MediaItem{
 			Id:         item.ItemId,
 			PvrName:    pvrName,
@@ -32,6 +27,16 @@ func SetMediaItems(pvrName string, wantedType string, mediaItems []pvr.MediaItem
 
 		if err != nil {
 			log.WithError(err).Errorf("Failed inserting media item: %v", item.ItemId)
+		}
+
+		// update item
+		if !item.LastSearch.IsZero() {
+			mediaItem.AirDateUtc = item.AirDateUtc
+			mediaItem.LastSearchDateUtc = &item.LastSearch
+
+			if err := tx.Save(&mediaItem).Error; err != nil {
+				log.WithError(err).Errorf("Failed updating media item: %v", item.ItemId)
+			}
 		}
 	}
 

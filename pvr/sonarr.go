@@ -244,8 +244,6 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 				ItemId:     episode.Id,
 				AirDateUtc: airDate,
 				LastSearch: time.Time{},
-				Name: fmt.Sprintf("%s - S%02dE%02d", episode.Title, episode.SeasonNumber,
-					episode.EpisodeNumber),
 			})
 		}
 		totalRecords += lastPageSize

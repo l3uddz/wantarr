@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tommysolsen/capitalise"
 	"strings"
+	"time"
 )
 
 var (
@@ -69,72 +70,62 @@ var missingCmd = &cobra.Command{
 				log.WithField("removed_items", removedItems).
 					Info("Removed media items from database that are no longer missing")
 			}
-
-			//if err := database.SetMediaItems(pvrName, "missing", missingRecords); err != nil {
-			//	log.WithError(err).Fatal("Failed stashing media items in database...")
-			//}
-
-			//newItems, err := db.SetMediaItems(missingRecords)
-			//if err != nil {
-			//	log.WithError(err).Errorf("Failed stashing media items in database...")
-			//	return
-			//}
-			//
-			//log.WithField("new_media_items", newItems).Info("Stashed media items in database")
-			//
-			//// remove media no longer missing
-			//if db.FromDisk() {
-			//	log.Debug("Removing media items from database that are no longer missing...")
-			//
-			//	removedItems, err := db.RemoveMissingMediaItems(missingRecords)
-			//	if err != nil {
-			//		log.WithError(err).Error("Failed removing media items from database that are no longer missing")
-			//	} else {
-			//		log.WithField("media_items", removedItems).
-			//			Info("Removed media items from database that are no longer missing")
-			//	}
-			//}
 		}
-		//
-		//// start queue monitor
-		//
-		//// start searching
-		//pos := 0
-		//var searchItemIds []int
-		//searchItems := make(map[int]pvrObj.MediaItem, 0)
-		//
-		//for itemId, item := range *db.GetVault() {
-		//	if !item.LastSearch.IsZero() {
-		//		continue
-		//	}
-		//
-		//	if pos > 9 {
-		//		break
-		//	} else {
-		//		pos++
-		//	}
-		//
-		//	itm := item
-		//	searchItems[itemId] = itm
-		//	searchItemIds = append(searchItemIds, itemId)
-		//}
-		//
-		//log.Info("Searching")
-		//log.Info(searchItemIds)
-		//
-		//ok, err := pvr.SearchMediaItems(searchItemIds)
-		//if err != nil {
-		//	log.WithError(err).Fatal("Failed searching for items")
-		//} else if !ok {
-		//	log.Error("Failed searching for items!")
-		//} else {
-		//	log.Info("Searched for items!")
-		//
-		//	for itemId, item := range searchItems {
-		//		item.LastSearch = time.Now().UTC()
-		//		_ = db.Set(itemId, &item, false)
-		//	}
-		//}
+
+		// start queue monitor
+
+		// get media items from database
+		mediaItems, err := database.GetMediaItems(lowerPvrName, "missing")
+		if err != nil {
+			log.WithError(err).Fatal("Failed retrieving media items from database...")
+		}
+		log.WithField("media_items", len(mediaItems)).Debug("Retrieved media items from database")
+
+		// start searching
+		var searchItems []pvrObj.MediaItem
+		batchSize := 10
+
+		for _, item := range mediaItems {
+			// add item to batch
+			searchItems = append(searchItems, pvrObj.MediaItem{
+				ItemId:     item.Id,
+				AirDateUtc: item.AirDateUtc,
+			})
+
+			// not enough items batched yet
+			if len(searchItems) < batchSize {
+				continue
+			}
+
+			// generate slice of search item ids
+			var searchItemIds []int
+			for _, searchItem := range searchItems {
+				searchItemIds = append(searchItemIds, searchItem.ItemId)
+			}
+
+			// do search
+			searchTime := time.Now().UTC()
+			ok, err := pvr.SearchMediaItems(searchItemIds)
+			if err != nil {
+				log.WithError(err).Fatal("Failed searching for items")
+			} else if !ok {
+				log.Fatal("Failed searching for items!")
+			} else {
+				log.Info("Searched for items!")
+
+				// update search items with lastsearch time
+				for pos, _ := range searchItems {
+					(&searchItems[pos]).LastSearch = searchTime
+				}
+
+				if err := database.SetMediaItems(lowerPvrName, "missing", searchItems); err != nil {
+					log.WithError(err).Fatal("Failed updating search items in database")
+				}
+			}
+
+			// reset batch
+			searchItems = []pvrObj.MediaItem{}
+		}
 
 	},
 }

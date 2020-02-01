@@ -17,7 +17,6 @@ type MediaItem struct {
 	ItemId     int
 	AirDateUtc time.Time
 	LastSearch time.Time
-	Name       string
 }
 
 type Interface interface {
