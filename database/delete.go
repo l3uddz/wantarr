@@ -33,7 +33,7 @@ func DeleteMissingItems(pvrName string, wantedType string, newMediaItems []pvr.M
 			if err := tx.Unscoped().Delete(&item).Error; err != nil {
 				tx.Rollback()
 				return 0, errors.WithMessagef(err, "failed removing media item: %v", item.Id)
-			} else if tx.RowsAffected > 0 {
+			} else {
 				removedItems += 1
 			}
 		}
