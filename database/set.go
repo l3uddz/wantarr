@@ -11,18 +11,24 @@ func SetMediaItems(pvrName string, wantedType string, mediaItems []pvr.MediaItem
 
 	// bulk insert/update items
 	for _, item := range mediaItems {
-		mediaItem := MediaItem{}
+		// set item to insert/update
+		mediaItem := MediaItem{
+			PvrName:    pvrName,
+			WantedType: wantedType,
+			AirDateUtc: item.AirDateUtc,
+		}
+
+		// update items last search if available
+		if !item.LastSearch.IsZero() {
+			mediaItem.LastSearchDateUtc = &item.LastSearch
+		}
 
 		// create or update media item
 		err := tx.Where(MediaItem{
 			Id:         item.ItemId,
 			PvrName:    pvrName,
 			WantedType: wantedType,
-		}).Assign(MediaItem{
-			PvrName:    pvrName,
-			WantedType: wantedType,
-			AirDateUtc: item.AirDateUtc,
-		}).FirstOrCreate(&mediaItem).Error
+		}).Assign(mediaItem).FirstOrCreate(&mediaItem).Error
 
 		if err != nil {
 			log.WithError(err).Errorf("Failed inserting media item: %v", item.ItemId)
