@@ -15,6 +15,7 @@ import (
 var (
 	maxQueueSize    int
 	searchBatchSize int
+	maxSearchItems  int
 )
 
 var missingCmd = &cobra.Command{
@@ -107,6 +108,8 @@ var missingCmd = &cobra.Command{
 
 		// start searching
 		var searchItems []pvrObj.MediaItem
+		searchedItemsCount := 0
+
 		for _, item := range mediaItems {
 			// abort if required (queue monitor will set this)
 			if !continueRunning.Load() {
@@ -117,7 +120,8 @@ var missingCmd = &cobra.Command{
 			if item.LastSearchDateUtc != nil && !item.LastSearchDateUtc.IsZero() {
 				retryAfterDate := item.LastSearchDateUtc.Add((24 * pvrConfig.RetryDaysAge) * time.Hour)
 				if time.Now().UTC().Before(retryAfterDate) {
-					log.WithField("retry_min_date", retryAfterDate).Tracef("Skipping media item %v until allowed retry date", item.Id)
+					log.WithField("retry_min_date", retryAfterDate).
+						Tracef("Skipping media item %v until allowed retry date", item.Id)
 					continue
 				}
 			}
@@ -129,17 +133,27 @@ var missingCmd = &cobra.Command{
 			})
 
 			// not enough items batched yet
-			if len(searchItems) < searchBatchSize {
+			batchedItemsCount := len(searchItems)
+			if batchedItemsCount < searchBatchSize {
 				continue
 			}
 
 			// search items
+			searchedItemsCount += batchedItemsCount
+
 			if _, err := searchForItems(searchItems); err != nil {
 				log.WithError(err).Error("Failed searching for items...")
 			}
 
 			// reset batch
 			searchItems = []pvrObj.MediaItem{}
+
+			// max search items reached?
+			if maxSearchItems > 0 && searchedItemsCount >= maxSearchItems {
+				log.WithField("searched_items", searchedItemsCount).
+					Info("Reached max search items, aborting...")
+				break
+			}
 
 			// sleep before next batch
 			time.Sleep(5 * time.Second)
@@ -159,7 +173,8 @@ func init() {
 	rootCmd.AddCommand(missingCmd)
 
 	missingCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 10, "Exit when queue size reached.")
-	missingCmd.Flags().IntVarP(&searchBatchSize, "search-batch-size", "s", 10, "How many items to search at once.")
+	missingCmd.Flags().IntVarP(&maxSearchItems, "max-search", "m", 0, "Exit when this many items have been searched.")
+	missingCmd.Flags().IntVarP(&searchBatchSize, "search-size", "s", 10, "How many items to search at once.")
 	missingCmd.Flags().BoolVarP(&flagRefreshCache, "refresh-cache", "r", false, "Refresh the locally stored cache.")
 }
 
