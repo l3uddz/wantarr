@@ -179,7 +179,7 @@ func (p *Sonarr) GetQueueSize() (int, error) {
 		return 0, errors.WithMessage(err, "failed decoding queue api response from sonarr")
 	}
 
-	p.log.WithField("queue_size", q.Size).Debug("Queue refreshed")
+	p.log.WithField("queue_size", q.Size).Debug("Queue retrieved")
 	return q.Size, nil
 }
 
