@@ -140,6 +140,9 @@ var missingCmd = &cobra.Command{
 
 			// reset batch
 			searchItems = []pvrObj.MediaItem{}
+
+			// sleep before next batch
+			time.Sleep(5 * time.Second)
 		}
 
 		// search for any leftover items from batching
