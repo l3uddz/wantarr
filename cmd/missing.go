@@ -12,12 +12,6 @@ import (
 	"time"
 )
 
-var (
-	maxQueueSize    int
-	searchBatchSize int
-	maxSearchItems  int
-)
-
 var missingCmd = &cobra.Command{
 	Use:   "missing [PVR]",
 	Short: "Search for missing media files",

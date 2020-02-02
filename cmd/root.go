@@ -34,6 +34,10 @@ var (
 	pvr             pvrObj.Interface
 	log             *logrus.Entry
 	continueRunning *atomic.Bool
+
+	maxQueueSize    int
+	searchBatchSize int
+	maxSearchItems  int
 )
 
 // rootCmd represents the base command when called without any subcommands
