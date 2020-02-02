@@ -3,15 +3,14 @@ package database
 import (
 	"github.com/l3uddz/wantarr/pvr"
 	"github.com/pkg/errors"
-	"strconv"
 )
 
 func DeleteMissingItems(pvrName string, wantedType string, newMediaItems []pvr.MediaItem) (int, error) {
 	// build slice of new item ids
-	newItemIds := make(map[string]*string, 0)
+	newItemIds := make(map[int]*string, 0)
 
 	for _, item := range newMediaItems {
-		newItemIds[strconv.Itoa(item.ItemId)] = nil
+		newItemIds[item.ItemId] = nil
 	}
 
 	// begin transaction
