@@ -193,9 +193,9 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey":  pvrDefaultSortKey,
-		"sortDir":  pvrDefaultSortDirection,
-		"pageSize": pvrDefaultPageSize,
+		"sortKey":   pvrDefaultSortKey,
+		"sortDir":   pvrDefaultSortDirection,
+		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
 
@@ -221,7 +221,7 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 		// validate response
 		if resp.Response().StatusCode != 200 {
 			resp.Response().Body.Close()
-			return nil, fmt.Errorf("failed retrieving valid wantedm issing api response from sonarr: %s",
+			return nil, fmt.Errorf("failed retrieving valid wanted missing api response from sonarr: %s",
 				resp.Response().Status)
 		}
 
@@ -255,6 +255,80 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 	p.log.WithField("media_items", totalRecords).Info("Finished")
 
 	return wantedMissing, nil
+}
+
+func (p *Sonarr) GetWantedCutoff() ([]MediaItem, error) {
+	// logic vars
+	totalRecords := 0
+	var wantedCutoff []MediaItem
+
+	page := 1
+	lastPageSize := pvrDefaultPageSize
+
+	// set params
+	params := req.QueryParam{
+		"sortKey":   pvrDefaultSortKey,
+		"sortDir":   pvrDefaultSortDirection,
+		"pageSize":  pvrDefaultPageSize,
+		"monitored": "true",
+	}
+
+	// retrieve all page results
+	p.log.Info("Retrieving wanted cutoff unmet media...")
+
+	for {
+		// break loop when all pages retrieved
+		if lastPageSize < pvrDefaultPageSize {
+			break
+		}
+
+		// set page
+		params["page"] = page
+
+		// send request
+		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
+			p.reqHeaders, params)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from sonarr")
+		}
+
+		// validate response
+		if resp.Response().StatusCode != 200 {
+			resp.Response().Body.Close()
+			return nil, fmt.Errorf("failed retrieving valid wanted cutoff unmet api response from sonarr: %s",
+				resp.Response().Status)
+		}
+
+		// decode response
+		var m SonarrWanted
+		if err := resp.ToJSON(&m); err != nil {
+			resp.Response().Body.Close()
+			return nil, errors.WithMessage(err, "failed decoding wanted cutoff unmet api response from sonarr")
+		}
+
+		// process response
+		lastPageSize = len(m.Records)
+		for _, episode := range m.Records {
+			// store this episode
+			airDate := episode.AirDateUtc
+			wantedCutoff = append(wantedCutoff, MediaItem{
+				ItemId:     episode.Id,
+				AirDateUtc: airDate,
+				LastSearch: time.Time{},
+			})
+		}
+		totalRecords += lastPageSize
+
+		p.log.WithField("page", page).Debug("Retrieved")
+		page += 1
+
+		// close response
+		resp.Response().Body.Close()
+	}
+
+	p.log.WithField("media_items", totalRecords).Info("Finished")
+
+	return wantedCutoff, nil
 }
 
 func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {

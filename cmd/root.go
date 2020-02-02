@@ -15,6 +15,7 @@ import (
 	"go.uber.org/atomic"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -104,6 +105,27 @@ func initConfig() {
 
 /* Private Helpers */
 
+func parseValidateInputs(args []string) error {
+	var ok bool = false
+	var err error = nil
+
+	// validate pvr exists in config
+	pvrName = args[0]
+	lowerPvrName = strings.ToLower(pvrName)
+	pvrConfig, ok = config.Config.Pvr[pvrName]
+	if !ok {
+		return fmt.Errorf("no pvr configuration found for: %q", pvrName)
+	}
+
+	// init pvrObj
+	pvr, err = pvrObj.Get(pvrName, pvrConfig.Type, pvrConfig)
+	if err != nil {
+		return errors.WithMessage(err, "failed loading pvr object")
+	}
+
+	return nil
+}
+
 func pluckMediaItemIds(mediaItems []pvrObj.MediaItem) []int {
 	var mediaItemIds []int
 
@@ -114,8 +136,7 @@ func pluckMediaItemIds(mediaItems []pvrObj.MediaItem) []int {
 	return mediaItemIds
 }
 
-
-func searchForItems(searchItems []pvrObj.MediaItem) (bool, error) {
+func searchForItems(searchItems []pvrObj.MediaItem, wantedType string) (bool, error) {
 	// set variables required for search
 	searchItemIds := pluckMediaItemIds(searchItems)
 	searchTime := time.Now().UTC()
@@ -136,7 +157,7 @@ func searchForItems(searchItems []pvrObj.MediaItem) (bool, error) {
 			(&searchItems[pos]).LastSearch = searchTime
 		}
 
-		if err := database.SetMediaItems(lowerPvrName, "missing", searchItems); err != nil {
+		if err := database.SetMediaItems(lowerPvrName, wantedType, searchItems); err != nil {
 			log.WithError(err).Fatal("Failed updating search items in database")
 		}
 	}

@@ -23,6 +23,7 @@ type Interface interface {
 	Init() error
 	GetQueueSize() (int, error)
 	GetWantedMissing() ([]MediaItem, error)
+	GetWantedCutoff() ([]MediaItem, error)
 	SearchMediaItems([]int) (bool, error)
 }
 

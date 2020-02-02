@@ -8,10 +8,10 @@ import (
 	"time"
 )
 
-var missingCmd = &cobra.Command{
-	Use:   "missing [PVR]",
-	Short: "Search for missing media files",
-	Long:  `This command can be used to search for missing media files from the respective arr wanted list.`,
+var cutoffCmd = &cobra.Command{
+	Use:   "cutoff [PVR]",
+	Short: "Search for cutoff unmet media files",
+	Long:  `This command can be used to search for cutoff unmet media files from the respective arr wanted list.`,
 
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -31,36 +31,36 @@ var missingCmd = &cobra.Command{
 		}
 		defer database.Close()
 
-		// retrieve missing records from pvr and stash in database
-		existingItemsCount := database.GetItemsCount(lowerPvrName, "missing")
+		// retrieve cutoff records from pvr and stash in database
+		existingItemsCount := database.GetItemsCount(lowerPvrName, "cutoff")
 		if flagRefreshCache || existingItemsCount < 1 {
-			log.Infof("Retrieving missing media from %s: %q", capitalise.First(pvrConfig.Type), pvrName)
+			log.Infof("Retrieving cutoff unmet media from %s: %q", capitalise.First(pvrConfig.Type), pvrName)
 
-			missingRecords, err := pvr.GetWantedMissing()
+			cutoffRecords, err := pvr.GetWantedCutoff()
 			if err != nil {
-				log.WithError(err).Fatal("Failed retrieving wanted missing pvr items...")
+				log.WithError(err).Fatal("Failed retrieving wanted cutoff unmet pvr items...")
 			}
 
-			// stash missing media in database
+			// stash cutoff media in database
 			log.Debug("Stashing media items in database...")
 
-			if err := database.SetMediaItems(lowerPvrName, "missing", missingRecords); err != nil {
+			if err := database.SetMediaItems(lowerPvrName, "cutoff", cutoffRecords); err != nil {
 				log.WithError(err).Fatal("Failed stashing media items in database")
 			}
 
 			log.Info("Stashed media items")
 
-			// remove media no longer missing
+			// remove media no longer cutoff unmet
 			if existingItemsCount >= 1 {
-				log.Debug("Removing media items from database that are no longer missing...")
+				log.Debug("Removing media items from database that are no longer cutoff unmet...")
 
-				removedItems, err := database.DeleteMissingItems(lowerPvrName, "missing", missingRecords)
+				removedItems, err := database.DeleteMissingItems(lowerPvrName, "cutoff", cutoffRecords)
 				if err != nil {
-					log.WithError(err).Fatal("Failed removing media items from database that are no longer missing...")
+					log.WithError(err).Fatal("Failed removing media items from database that are no longer cutoff unmet...")
 				}
 
 				log.WithField("removed_items", removedItems).
-					Info("Removed media items from database that are no longer missing")
+					Info("Removed media items from database that are no longer cutoff unmet")
 			}
 		}
 
@@ -90,7 +90,7 @@ var missingCmd = &cobra.Command{
 		}()
 
 		// get media items from database
-		mediaItems, err := database.GetMediaItems(lowerPvrName, "missing")
+		mediaItems, err := database.GetMediaItems(lowerPvrName, "cutoff")
 		if err != nil {
 			log.WithError(err).Fatal("Failed retrieving media items from database...")
 		}
@@ -131,7 +131,7 @@ var missingCmd = &cobra.Command{
 			// search items
 			searchedItemsCount += batchedItemsCount
 
-			if _, err := searchForItems(searchItems, "missing"); err != nil {
+			if _, err := searchForItems(searchItems, "cutoff"); err != nil {
 				log.WithError(err).Error("Failed searching for items...")
 			}
 
@@ -152,7 +152,7 @@ var missingCmd = &cobra.Command{
 		// search for any leftover items from batching
 		if continueRunning.Load() && len(searchItems) > 0 {
 			// search items
-			if _, err := searchForItems(searchItems, "missing"); err != nil {
+			if _, err := searchForItems(searchItems, "cutoff"); err != nil {
 				log.WithError(err).Error("Failed searching for items...")
 			}
 		}
@@ -160,10 +160,10 @@ var missingCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(missingCmd)
+	rootCmd.AddCommand(cutoffCmd)
 
-	missingCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 10, "Exit when queue size reached.")
-	missingCmd.Flags().IntVarP(&maxSearchItems, "max-search", "m", 0, "Exit when this many items have been searched.")
-	missingCmd.Flags().IntVarP(&searchBatchSize, "search-size", "s", 10, "How many items to search at once.")
-	missingCmd.Flags().BoolVarP(&flagRefreshCache, "refresh-cache", "r", false, "Refresh the locally stored cache.")
+	cutoffCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 10, "Exit when queue size reached.")
+	cutoffCmd.Flags().IntVarP(&maxSearchItems, "max-search", "m", 0, "Exit when this many items have been searched.")
+	cutoffCmd.Flags().IntVarP(&searchBatchSize, "search-size", "s", 10, "How many items to search at once.")
+	cutoffCmd.Flags().BoolVarP(&flagRefreshCache, "refresh-cache", "r", false, "Refresh the locally stored cache.")
 }
