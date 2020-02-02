@@ -196,6 +196,7 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 		"sortKey":  pvrDefaultSortKey,
 		"sortDir":  pvrDefaultSortDirection,
 		"pageSize": pvrDefaultPageSize,
+		"monitored": "true",
 	}
 
 	// retrieve all page results
@@ -234,11 +235,6 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 		// process response
 		lastPageSize = len(m.Records)
 		for _, episode := range m.Records {
-			// skip unmonitored episode
-			if !episode.Monitored {
-				continue
-			}
-
 			// store this episode
 			airDate := episode.AirDateUtc
 			wantedMissing = append(wantedMissing, MediaItem{
