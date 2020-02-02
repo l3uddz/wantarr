@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	maxQueueSize int
+	maxQueueSize    int
+	searchBatchSize int
 )
 
 var missingCmd = &cobra.Command{
@@ -83,9 +84,12 @@ var missingCmd = &cobra.Command{
 
 		// start searching
 		var searchItems []pvrObj.MediaItem
-		batchSize := 10
-
 		for _, item := range mediaItems {
+			// abort if required (queue monitor will set this)
+			if !continueRunning.Load() {
+				break
+			}
+
 			// dont search this item if we already searched it within N days
 			if item.LastSearchDateUtc != nil && !item.LastSearchDateUtc.IsZero() {
 				retryAfterDate := item.LastSearchDateUtc.Add((24 * pvrConfig.RetryDaysAge) * time.Hour)
@@ -102,7 +106,7 @@ var missingCmd = &cobra.Command{
 			})
 
 			// not enough items batched yet
-			if len(searchItems) < batchSize {
+			if len(searchItems) < searchBatchSize {
 				continue
 			}
 
@@ -111,6 +115,8 @@ var missingCmd = &cobra.Command{
 			searchTime := time.Now().UTC()
 
 			// do search
+			log.WithField("search_items", len(searchItems)).Info("Searching...")
+
 			ok, err := pvr.SearchMediaItems(searchItemIds)
 			if err != nil {
 				log.WithError(err).Fatal("Failed searching for items")
@@ -139,7 +145,8 @@ var missingCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(missingCmd)
 
-	missingCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 5, "Exit when queue size reached.")
+	missingCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 10, "Exit when queue size reached.")
+	missingCmd.Flags().IntVarP(&searchBatchSize, "search-batch-size", "s", 10, "How many items to search at once.")
 	missingCmd.Flags().BoolVarP(&flagRefreshCache, "refresh-cache", "r", false, "Refresh the locally stored cache.")
 }
 

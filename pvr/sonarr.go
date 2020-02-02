@@ -288,7 +288,7 @@ func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	}
 
 	// monitor search status
-	p.log.WithField("command_id", q.Id).Info("Monitoring search status")
+	p.log.WithField("command_id", q.Id).Debug("Monitoring search status")
 
 	for {
 		// retrieve command status
@@ -307,7 +307,7 @@ func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 			break
 		}
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 
 	return true, nil

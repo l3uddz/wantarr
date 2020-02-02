@@ -20,6 +20,7 @@ require (
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/tommysolsen/capitalise v0.0.0-20171110170156-1df6e863d8ab
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
+	go.uber.org/atomic v1.4.0
 	golang.org/x/net v0.0.0-20191105084925-a882066a44e0 // indirect
 	golang.org/x/sys v0.0.0-20191228213918-04cbcbbfeed8 // indirect
 	golang.org/x/text v0.3.2 // indirect

@@ -10,6 +10,7 @@ import (
 	stringutils "github.com/l3uddz/wantarr/utils/strings"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"go.uber.org/atomic"
 	"os"
 	"path/filepath"
 )
@@ -24,11 +25,12 @@ var (
 	flagRefreshCache = false
 
 	// Global vars
-	pvrName      string
-	lowerPvrName string
-	pvrConfig    *config.Pvr
-	pvr          pvrObj.Interface
-	log          *logrus.Entry
+	pvrName         string
+	lowerPvrName    string
+	pvrConfig       *config.Pvr
+	pvr             pvrObj.Interface
+	log             *logrus.Entry
+	continueRunning *atomic.Bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -88,6 +90,9 @@ func initConfig() {
 	if err := config.Init(flagConfigFile); err != nil {
 		log.WithError(err).Fatal("Failed to initialize config")
 	}
+
+	// Init Globals
+	continueRunning = atomic.NewBool(true)
 }
 
 /* Private Helpers */
