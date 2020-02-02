@@ -89,3 +89,15 @@ func initConfig() {
 		log.WithError(err).Fatal("Failed to initialize config")
 	}
 }
+
+/* Private Helpers */
+
+func pluckMediaItemIds(mediaItems []pvrObj.MediaItem) []int {
+	var mediaItemIds []int
+
+	for _, mediaItem := range mediaItems {
+		mediaItemIds = append(mediaItemIds, mediaItem.ItemId)
+	}
+
+	return mediaItemIds
+}

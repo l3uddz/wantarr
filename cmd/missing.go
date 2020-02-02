@@ -86,6 +86,15 @@ var missingCmd = &cobra.Command{
 		batchSize := 10
 
 		for _, item := range mediaItems {
+			// dont search this item if we already searched it within N days
+			if item.LastSearchDateUtc != nil && !item.LastSearchDateUtc.IsZero() {
+				retryAfterDate := item.LastSearchDateUtc.Add((24 * pvrConfig.RetryDaysAge) * time.Hour)
+				if time.Now().UTC().Before(retryAfterDate) {
+					log.WithField("retry_min_date", retryAfterDate).Tracef("Skipping media item %v until allowed retry date", item.Id)
+					continue
+				}
+			}
+
 			// add item to batch
 			searchItems = append(searchItems, pvrObj.MediaItem{
 				ItemId:     item.Id,
@@ -97,14 +106,11 @@ var missingCmd = &cobra.Command{
 				continue
 			}
 
-			// generate slice of search item ids
-			var searchItemIds []int
-			for _, searchItem := range searchItems {
-				searchItemIds = append(searchItemIds, searchItem.ItemId)
-			}
+			// set variables required for search
+			searchItemIds := pluckMediaItemIds(searchItems)
+			searchTime := time.Now().UTC()
 
 			// do search
-			searchTime := time.Now().UTC()
 			ok, err := pvr.SearchMediaItems(searchItemIds)
 			if err != nil {
 				log.WithError(err).Fatal("Failed searching for items")
@@ -113,7 +119,7 @@ var missingCmd = &cobra.Command{
 			} else {
 				log.Info("Searched for items!")
 
-				// update search items with lastsearch time
+				// update search items lastsearch time
 				for pos, _ := range searchItems {
 					(&searchItems[pos]).LastSearch = searchTime
 				}
