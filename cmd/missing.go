@@ -151,7 +151,7 @@ var missingCmd = &cobra.Command{
 			// max search items reached?
 			if maxSearchItems > 0 && searchedItemsCount >= maxSearchItems {
 				log.WithField("searched_items", searchedItemsCount).
-					Info("Reached max search items, aborting...")
+					Info("Max search items reached, aborting...")
 				break
 			}
 
