@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/l3uddz/wantarr/database"
 	pvrObj "github.com/l3uddz/wantarr/pvr"
+	stringutils "github.com/l3uddz/wantarr/utils/strings"
 	"github.com/spf13/cobra"
 	"github.com/tommysolsen/capitalise"
 	"time"
@@ -118,7 +119,7 @@ var missingCmd = &cobra.Command{
 
 			// add item to batch
 			searchItems = append(searchItems, pvrObj.MediaItem{
-				ItemId:     item.Id,
+				ItemId:     stringutils.StringToInt(item.Id),
 				AirDateUtc: item.AirDateUtc,
 			})
 

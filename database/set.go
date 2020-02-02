@@ -3,6 +3,7 @@ package database
 import (
 	"github.com/l3uddz/wantarr/pvr"
 	"github.com/pkg/errors"
+	"strconv"
 )
 
 func SetMediaItems(pvrName string, wantedType string, mediaItems []pvr.MediaItem) error {
@@ -20,7 +21,7 @@ func SetMediaItems(pvrName string, wantedType string, mediaItems []pvr.MediaItem
 
 		// create item if not exists
 		err := tx.Where(MediaItem{
-			Id:         item.ItemId,
+			Id:         strconv.Itoa(item.ItemId),
 			PvrName:    pvrName,
 			WantedType: wantedType,
 		}).Assign(mediaItem).FirstOrCreate(&mediaItem).Error
