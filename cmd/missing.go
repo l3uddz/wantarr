@@ -110,35 +110,22 @@ var missingCmd = &cobra.Command{
 				continue
 			}
 
-			// set variables required for search
-			searchItemIds := pluckMediaItemIds(searchItems)
-			searchTime := time.Now().UTC()
-
-			// do search
-			log.WithField("search_items", len(searchItems)).Info("Searching...")
-
-			ok, err := pvr.SearchMediaItems(searchItemIds)
-			if err != nil {
-				log.WithError(err).Fatal("Failed searching for items")
-			} else if !ok {
-				log.Fatal("Failed searching for items!")
-			} else {
-				log.Info("Searched for items!")
-
-				// update search items lastsearch time
-				for pos, _ := range searchItems {
-					(&searchItems[pos]).LastSearch = searchTime
-				}
-
-				if err := database.SetMediaItems(lowerPvrName, "missing", searchItems); err != nil {
-					log.WithError(err).Fatal("Failed updating search items in database")
-				}
+			// search items
+			if _, err := searchForItems(searchItems); err != nil {
+				log.WithError(err).Error("Failed searching for items...")
 			}
 
 			// reset batch
 			searchItems = []pvrObj.MediaItem{}
 		}
 
+		// search for any leftover items from batching
+		if continueRunning.Load() && len(searchItems) > 0 {
+			// search items
+			if _, err := searchForItems(searchItems); err != nil {
+				log.WithError(err).Error("Failed searching for items...")
+			}
+		}
 	},
 }
 

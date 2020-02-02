@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"github.com/l3uddz/wantarr/build"
 	"github.com/l3uddz/wantarr/config"
+	"github.com/l3uddz/wantarr/database"
 	"github.com/l3uddz/wantarr/logger"
 	pvrObj "github.com/l3uddz/wantarr/pvr"
 	"github.com/l3uddz/wantarr/utils/paths"
 	stringutils "github.com/l3uddz/wantarr/utils/strings"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"go.uber.org/atomic"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var (
@@ -105,4 +108,34 @@ func pluckMediaItemIds(mediaItems []pvrObj.MediaItem) []int {
 	}
 
 	return mediaItemIds
+}
+
+
+func searchForItems(searchItems []pvrObj.MediaItem) (bool, error) {
+	// set variables required for search
+	searchItemIds := pluckMediaItemIds(searchItems)
+	searchTime := time.Now().UTC()
+
+	// do search
+	log.WithField("search_items", len(searchItems)).Info("Searching...")
+
+	ok, err := pvr.SearchMediaItems(searchItemIds)
+	if err != nil {
+		return false, err
+	} else if !ok {
+		return false, errors.New("failed unexpectedly searching for items")
+	} else {
+		log.Info("Searched for items!")
+
+		// update search items lastsearch time
+		for pos, _ := range searchItems {
+			(&searchItems[pos]).LastSearch = searchTime
+		}
+
+		if err := database.SetMediaItems(lowerPvrName, "missing", searchItems); err != nil {
+			log.WithError(err).Fatal("Failed updating search items in database")
+		}
+	}
+
+	return true, nil
 }
