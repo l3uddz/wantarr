@@ -134,7 +134,6 @@ var cutoffCmd = &cobra.Command{
 			// do search
 			log.WithFields(logrus.Fields{
 				"search_items":   batchedItemsCount,
-				"searched_items": searchedItemsCount,
 			}).Info("Searching...")
 
 			searchedItemsCount += batchedItemsCount
@@ -166,7 +165,6 @@ var cutoffCmd = &cobra.Command{
 			// search items
 			log.WithFields(logrus.Fields{
 				"search_items":   len(searchItems),
-				"searched_items": searchedItemsCount,
 			}).Info("Searching...")
 
 			searchedItemsCount += len(searchItems)
