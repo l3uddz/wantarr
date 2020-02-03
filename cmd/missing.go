@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/l3uddz/wantarr/database"
 	pvrObj "github.com/l3uddz/wantarr/pvr"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/tommysolsen/capitalise"
 	"time"
@@ -130,11 +131,20 @@ var missingCmd = &cobra.Command{
 				continue
 			}
 
-			// search items
+			// do search
+			log.WithFields(logrus.Fields{
+				"search_items":   batchedItemsCount,
+				"searched_items": searchedItemsCount,
+			}).Info("Searching...")
+
 			searchedItemsCount += batchedItemsCount
 
 			if _, err := searchForItems(searchItems, "missing"); err != nil {
 				log.WithError(err).Error("Failed searching for items...")
+			} else {
+				log.WithFields(logrus.Fields{
+					"searched_items": searchedItemsCount,
+				}).Info("Search finished...")
 			}
 
 			// reset batch
@@ -154,8 +164,19 @@ var missingCmd = &cobra.Command{
 		// search for any leftover items from batching
 		if continueRunning.Load() && len(searchItems) > 0 {
 			// search items
+			log.WithFields(logrus.Fields{
+				"search_items":   len(searchItems),
+				"searched_items": searchedItemsCount,
+			}).Info("Searching...")
+
+			searchedItemsCount += len(searchItems)
+
 			if _, err := searchForItems(searchItems, "missing"); err != nil {
 				log.WithError(err).Error("Failed searching for items...")
+			} else {
+				log.WithFields(logrus.Fields{
+					"searched_items": searchedItemsCount,
+				}).Info("Search finished...")
 			}
 		}
 	},

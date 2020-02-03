@@ -141,17 +141,12 @@ func searchForItems(searchItems []pvrObj.MediaItem, wantedType string) (bool, er
 	searchItemIds := pluckMediaItemIds(searchItems)
 	searchTime := time.Now().UTC()
 
-	// do search
-	log.WithField("search_items", len(searchItems)).Info("Searching...")
-
 	ok, err := pvr.SearchMediaItems(searchItemIds)
 	if err != nil {
 		return false, err
 	} else if !ok {
 		return false, errors.New("failed unexpectedly searching for items")
 	} else {
-		log.Info("Searched for items!")
-
 		// update search items lastsearch time
 		for pos, _ := range searchItems {
 			(&searchItems[pos]).LastSearch = searchTime
