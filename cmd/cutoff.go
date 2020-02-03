@@ -144,7 +144,7 @@ var cutoffCmd = &cobra.Command{
 			} else {
 				log.WithFields(logrus.Fields{
 					"searched_items": searchedItemsCount,
-				}).Info("Search finished...")
+				}).Info("Search complete")
 			}
 
 			// reset batch
@@ -176,7 +176,7 @@ var cutoffCmd = &cobra.Command{
 			} else {
 				log.WithFields(logrus.Fields{
 					"searched_items": searchedItemsCount,
-				}).Info("Search finished...")
+				}).Info("Search complete")
 			}
 		}
 	},
