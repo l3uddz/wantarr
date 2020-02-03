@@ -34,6 +34,8 @@ func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, erro
 	switch strings.ToLower(pvrType) {
 	case "sonarr":
 		return NewSonarr(pvrName, pvrConfig), nil
+	case "radarr":
+		return NewRadarr(pvrName, pvrConfig), nil
 	default:
 		break
 	}

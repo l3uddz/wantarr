@@ -14,7 +14,7 @@ import (
 
 /* Structs */
 
-type Sonarr struct {
+type Radarr struct {
 	cfg        *config.Pvr
 	log        *logrus.Entry
 	apiUrl     string
@@ -22,30 +22,26 @@ type Sonarr struct {
 	version    int
 }
 
-type SonarrQueue struct {
-	Size int `json:"totalRecords"`
-}
-
-type SonarrEpisode struct {
+type RadarrMovie struct {
 	Id            int
-	AirDateUtc    time.Time
+	AirDateUtc    time.Time `json:"inCinemas"`
 	Monitored     bool
 }
 
-type SonarrWanted struct {
+type RadarrWanted struct {
 	Page          int
 	PageSize      int
 	SortKey       string
 	SortDirection string
 	TotalRecords  int
-	Records       []SonarrEpisode
+	Records       []RadarrMovie
 }
 
-type SonarrSystemStatus struct {
+type RadarrSystemStatus struct {
 	Version string
 }
 
-type SonarrCommandStatus struct {
+type RadarrCommandStatus struct {
 	Name    string
 	Message string
 	Started time.Time
@@ -53,24 +49,24 @@ type SonarrCommandStatus struct {
 	Status  string
 }
 
-type SonarrCommandResponse struct {
+type RadarrCommandResponse struct {
 	Id int
 }
 
-type SonarrEpisodeSearch struct {
+type RadarrMovieSearch struct {
 	Name     string `json:"name"`
-	Episodes []int  `json:"episodeIds"`
+	Movies []int  `json:"movieIds"`
 }
 
 /* Initializer */
 
-func NewSonarr(name string, c *config.Pvr) *Sonarr {
+func NewRadarr(name string, c *config.Pvr) *Radarr {
 	// set api url
 	apiUrl := ""
 	if strings.Contains(c.URL, "/api") {
 		apiUrl = c.URL
 	} else {
-		apiUrl = web.JoinURL(c.URL, "/api/v3")
+		apiUrl = web.JoinURL(c.URL, "/api")
 	}
 
 	// set headers
@@ -78,7 +74,7 @@ func NewSonarr(name string, c *config.Pvr) *Sonarr {
 		"X-Api-Key": c.ApiKey,
 	}
 
-	return &Sonarr{
+	return &Radarr{
 		cfg:        c,
 		log:        logger.GetLogger(name),
 		apiUrl:     apiUrl,
@@ -88,48 +84,48 @@ func NewSonarr(name string, c *config.Pvr) *Sonarr {
 
 /* Private */
 
-func (p *Sonarr) getSystemStatus() (*SonarrSystemStatus, error) {
+func (p *Radarr) getSystemStatus() (*RadarrSystemStatus, error) {
 	// send request
 	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders)
 	if err != nil {
-		return nil, errors.New("failed retrieving system status api response from sonarr")
+		return nil, errors.New("failed retrieving system status api response from radarr")
 	}
 	defer resp.Response().Body.Close()
 
 	// validate response
 	if resp.Response().StatusCode != 200 {
-		return nil, fmt.Errorf("failed retrieving valid system status api response from sonarr: %s",
+		return nil, fmt.Errorf("failed retrieving valid system status api response from radarr: %s",
 			resp.Response().Status)
 	}
 
 	// decode response
-	var s SonarrSystemStatus
+	var s RadarrSystemStatus
 	if err := resp.ToJSON(&s); err != nil {
-		return nil, errors.WithMessage(err, "failed decoding system status api response from sonarr")
+		return nil, errors.WithMessage(err, "failed decoding system status api response from radarr")
 	}
 
 	return &s, nil
 }
 
-func (p *Sonarr) getCommandStatus(id int) (*SonarrCommandStatus, error) {
+func (p *Radarr) getCommandStatus(id int) (*RadarrCommandStatus, error) {
 	// send request
 	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), 15,
 		p.reqHeaders)
 	if err != nil {
-		return nil, errors.New("failed retrieving command status api response from sonarr")
+		return nil, errors.New("failed retrieving command status api response from radarr")
 	}
 	defer resp.Response().Body.Close()
 
 	// validate response
 	if resp.Response().StatusCode != 200 {
-		return nil, fmt.Errorf("failed retrieving valid command status api response from sonarr: %s",
+		return nil, fmt.Errorf("failed retrieving valid command status api response from radarr: %s",
 			resp.Response().Status)
 	}
 
 	// decode response
-	var s SonarrCommandStatus
+	var s RadarrCommandStatus
 	if err := resp.ToJSON(&s); err != nil {
-		return nil, errors.WithMessage(err, "failed decoding command status api response from sonarr")
+		return nil, errors.WithMessage(err, "failed decoding command status api response from radarr")
 	}
 
 	return &s, nil
@@ -137,48 +133,49 @@ func (p *Sonarr) getCommandStatus(id int) (*SonarrCommandStatus, error) {
 
 /* Interface Implements */
 
-func (p *Sonarr) Init() error {
+func (p *Radarr) Init() error {
 	// retrieve system status
 	status, err := p.getSystemStatus()
 	if err != nil {
-		return errors.Wrap(err, "failed initializing sonarr pvr")
+		return errors.Wrap(err, "failed initializing radarr pvr")
 	}
 
 	// determine version
-	switch status.Version[0:1] {
-	case "3":
-		p.version = 3
+	switch status.Version[0:3] {
+	case "0.2":
+		p.version = 2
 	default:
-		return fmt.Errorf("unsupported version of sonarr pvr: %s", status.Version)
+		return fmt.Errorf("unsupported version of radarr pvr: %s", status.Version)
 	}
 	return nil
 }
 
-func (p *Sonarr) GetQueueSize() (int, error) {
+func (p *Radarr) GetQueueSize() (int, error) {
 	// send request
 	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders)
 	if err != nil {
-		return 0, errors.WithMessage(err, "failed retrieving queue api response from sonarr")
+		return 0, errors.WithMessage(err, "failed retrieving queue api response from radarr")
 	}
 	defer resp.Response().Body.Close()
 
 	// validate response
 	if resp.Response().StatusCode != 200 {
-		return 0, fmt.Errorf("failed retrieving valid queue api response from sonarr: %s",
+		return 0, fmt.Errorf("failed retrieving valid queue api response from radarr: %s",
 			resp.Response().Status)
 	}
 
 	// decode response
-	var q SonarrQueue
+	var q []interface{}
 	if err := resp.ToJSON(&q); err != nil {
-		return 0, errors.WithMessage(err, "failed decoding queue api response from sonarr")
+		return 0, errors.WithMessage(err, "failed decoding queue api response from radarr")
 	}
 
-	p.log.WithField("queue_size", q.Size).Debug("Queue retrieved")
-	return q.Size, nil
+	queueSize := len(q)
+	p.log.WithField("queue_size", queueSize).Debug("Queue retrieved")
+	return queueSize, nil
 }
 
-func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
+func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 	// logic vars
 	totalRecords := 0
 	var wantedMissing []MediaItem
@@ -210,30 +207,30 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
 			p.reqHeaders, params)
 		if err != nil {
-			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from sonarr")
+			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from radarr")
 		}
 
 		// validate response
 		if resp.Response().StatusCode != 200 {
 			_ = resp.Response().Body.Close()
-			return nil, fmt.Errorf("failed retrieving valid wanted missing api response from sonarr: %s",
+			return nil, fmt.Errorf("failed retrieving valid wanted missing api response from radarr: %s",
 				resp.Response().Status)
 		}
 
 		// decode response
-		var m SonarrWanted
+		var m RadarrWanted
 		if err := resp.ToJSON(&m); err != nil {
 			_ = resp.Response().Body.Close()
-			return nil, errors.WithMessage(err, "failed decoding wanted missing api response from sonarr")
+			return nil, errors.WithMessage(err, "failed decoding wanted missing api response from radarr")
 		}
 
 		// process response
 		lastPageSize = len(m.Records)
-		for _, episode := range m.Records {
-			// store this episode
-			airDate := episode.AirDateUtc
+		for _, movie := range m.Records {
+			// store this movie
+			airDate := movie.AirDateUtc
 			wantedMissing = append(wantedMissing, MediaItem{
-				ItemId:     episode.Id,
+				ItemId:     movie.Id,
 				AirDateUtc: airDate,
 				LastSearch: time.Time{},
 			})
@@ -252,7 +249,7 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 	return wantedMissing, nil
 }
 
-func (p *Sonarr) GetWantedCutoff() ([]MediaItem, error) {
+func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 	// logic vars
 	totalRecords := 0
 	var wantedCutoff []MediaItem
@@ -284,30 +281,30 @@ func (p *Sonarr) GetWantedCutoff() ([]MediaItem, error) {
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
 			p.reqHeaders, params)
 		if err != nil {
-			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from sonarr")
+			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from radarr")
 		}
 
 		// validate response
 		if resp.Response().StatusCode != 200 {
 			_ = resp.Response().Body.Close()
-			return nil, fmt.Errorf("failed retrieving valid wanted cutoff unmet api response from sonarr: %s",
+			return nil, fmt.Errorf("failed retrieving valid wanted cutoff unmet api response from radarr: %s",
 				resp.Response().Status)
 		}
 
 		// decode response
-		var m SonarrWanted
+		var m RadarrWanted
 		if err := resp.ToJSON(&m); err != nil {
 			_ = resp.Response().Body.Close()
-			return nil, errors.WithMessage(err, "failed decoding wanted cutoff unmet api response from sonarr")
+			return nil, errors.WithMessage(err, "failed decoding wanted cutoff unmet api response from radarr")
 		}
 
 		// process response
 		lastPageSize = len(m.Records)
-		for _, episode := range m.Records {
-			// store this episode
-			airDate := episode.AirDateUtc
+		for _, movie := range m.Records {
+			// store this movie
+			airDate := movie.AirDateUtc
 			wantedCutoff = append(wantedCutoff, MediaItem{
-				ItemId:     episode.Id,
+				ItemId:     movie.Id,
 				AirDateUtc: airDate,
 				LastSearch: time.Time{},
 			})
@@ -326,31 +323,31 @@ func (p *Sonarr) GetWantedCutoff() ([]MediaItem, error) {
 	return wantedCutoff, nil
 }
 
-func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
+func (p *Radarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	// set request data
-	payload := SonarrEpisodeSearch{
-		Name:     "EpisodeSearch",
-		Episodes: mediaItemIds,
+	payload := RadarrMovieSearch{
+		Name:     "moviesSearch",
+		Movies: mediaItemIds,
 	}
 
 	// send request
 	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), 15, p.reqHeaders,
 		req.BodyJSON(&payload))
 	if err != nil {
-		return false, errors.WithMessage(err, "failed retrieving command api response from sonarr")
+		return false, errors.WithMessage(err, "failed retrieving command api response from radarr")
 	}
 	defer resp.Response().Body.Close()
 
 	// validate response
 	if resp.Response().StatusCode != 201 {
-		return false, fmt.Errorf("failed retrieving valid command api response from sonarr: %s",
+		return false, fmt.Errorf("failed retrieving valid command api response from radarr: %s",
 			resp.Response().Status)
 	}
 
 	// decode response
-	var q SonarrCommandResponse
+	var q RadarrCommandResponse
 	if err := resp.ToJSON(&q); err != nil {
-		return false, errors.WithMessage(err, "failed decoding command api response from sonarr")
+		return false, errors.WithMessage(err, "failed decoding command api response from radarr")
 	}
 
 	// monitor search status
@@ -360,7 +357,7 @@ func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 		// retrieve command status
 		searchStatus, err := p.getCommandStatus(q.Id)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed retrieving command status from sonarr for: %d", q.Id)
+			return false, errors.Wrapf(err, "failed retrieving command status from radarr for: %d", q.Id)
 		}
 
 		p.log.WithFields(logrus.Fields{
