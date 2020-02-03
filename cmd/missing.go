@@ -90,7 +90,7 @@ var missingCmd = &cobra.Command{
 		}()
 
 		// get media items from database
-		mediaItems, err := database.GetMediaItems(lowerPvrName, "missing")
+		mediaItems, err := database.GetMediaItems(lowerPvrName, "missing", true)
 		if err != nil {
 			log.WithError(err).Fatal("Failed retrieving media items from database...")
 		}

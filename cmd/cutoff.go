@@ -90,7 +90,7 @@ var cutoffCmd = &cobra.Command{
 		}()
 
 		// get media items from database
-		mediaItems, err := database.GetMediaItems(lowerPvrName, "cutoff")
+		mediaItems, err := database.GetMediaItems(lowerPvrName, "cutoff", false)
 		if err != nil {
 			log.WithError(err).Fatal("Failed retrieving media items from database...")
 		}
