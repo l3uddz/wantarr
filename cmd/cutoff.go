@@ -65,29 +65,31 @@ var cutoffCmd = &cobra.Command{
 		}
 
 		// start queue monitor
-		go func() {
-			log.Info("Started queue monitor")
-			for {
-				// retrieve queue size
-				qs, err := pvr.GetQueueSize()
-				if err != nil {
-					log.WithError(err).Error("Failed retrieving queue size, aborting...")
-					continueRunning.Store(false)
-					break
-				}
+		if maxQueueSize > 0 {
+			go func() {
+				log.Info("Started queue monitor")
+				for {
+					// retrieve queue size
+					qs, err := pvr.GetQueueSize()
+					if err != nil {
+						log.WithError(err).Error("Failed retrieving queue size, aborting...")
+						continueRunning.Store(false)
+						break
+					}
 
-				// check queue size
-				if qs >= maxQueueSize {
-					log.Warnf("Queue size has been reached, aborting....")
-					continueRunning.Store(false)
-					break
-				}
+					// check queue size
+					if qs >= maxQueueSize {
+						log.Warnf("Queue size has been reached, aborting....")
+						continueRunning.Store(false)
+						break
+					}
 
-				// sleep before check
-				time.Sleep(10 * time.Second)
-			}
-			log.Info("Finished queue monitor")
-		}()
+					// sleep before check
+					time.Sleep(10 * time.Second)
+				}
+				log.Info("Finished queue monitor")
+			}()
+		}
 
 		// get media items from database
 		mediaItems, err := database.GetMediaItems(lowerPvrName, "cutoff", false)
@@ -162,7 +164,7 @@ var cutoffCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(cutoffCmd)
 
-	cutoffCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 10, "Exit when queue size reached.")
+	cutoffCmd.Flags().IntVarP(&maxQueueSize, "queue-size", "q", 0, "Exit when queue size reached.")
 	cutoffCmd.Flags().IntVarP(&maxSearchItems, "max-search", "m", 0, "Exit when this many items have been searched.")
 	cutoffCmd.Flags().IntVarP(&searchBatchSize, "search-size", "s", 10, "How many items to search at once.")
 	cutoffCmd.Flags().BoolVarP(&flagRefreshCache, "refresh-cache", "r", false, "Refresh the locally stored cache.")
