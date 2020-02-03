@@ -108,7 +108,7 @@ var missingCmd = &cobra.Command{
 
 			// dont search this item if we already searched it within N days
 			if item.LastSearchDateUtc != nil && !item.LastSearchDateUtc.IsZero() {
-				retryAfterDate := item.LastSearchDateUtc.Add((24 * pvrConfig.RetryDaysAge) * time.Hour)
+				retryAfterDate := item.LastSearchDateUtc.Add((24 * pvrConfig.RetryDaysAge.Missing) * time.Hour)
 				if time.Now().UTC().Before(retryAfterDate) {
 					log.WithField("retry_min_date", retryAfterDate).
 						Tracef("Skipping media item %v until allowed retry date", item.Id)
