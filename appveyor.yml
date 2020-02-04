@@ -1,7 +1,7 @@
 image:
 #  - Ubuntu1804
 #  - macOS
-  - Visual Studio 2019
+  - Visual Studio 2013
 platform: x64
 
 branches:
@@ -17,7 +17,6 @@ install:
   - go env
   - cinst make
   - cinst mingw
-  - cinst sqlite
   - make vendor
 
 build_script:
