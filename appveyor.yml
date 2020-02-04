@@ -1,7 +1,6 @@
 image:
-#  - Ubuntu1804
-#  - macOS
-  - Visual Studio 2013
+  - Ubuntu1804
+  - macOS
 
 platform: x64
 
@@ -11,13 +10,11 @@ branches:
     - develop
 
 artifacts:
-  - path: dist
+  - path: 'dist/$(CMD)_$(TARGET)'
 
 install:
   - go version
   - go env
-  - cinst make
-  - make vendor
 
 build_script:
   - make build
