@@ -1,7 +1,7 @@
 image:
 #  - Ubuntu1804
 #  - macOS
-  - Visual Studio 2015
+  - Visual Studio 2013
 
 platform: x64
 
