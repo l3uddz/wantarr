@@ -51,10 +51,6 @@ vendor_update: ## Update vendor dependencies
 .PHONY: build
 build: fetch ${BUILD_PATH}/${CMD} ## Build application
 
-.PHONY: build-all
-build-all:
-	@$(foreach GOOS,$(PLATFORMS), $(foreach GOARCH,$(ARCHITECTURES), ${MAKE} build GOOS=${GOOS} GOARCH=${GOARCH};))
-
 # Binary
 ${BUILD_PATH}/${CMD}: ${GO_FILES} go.sum
 	@echo "Building for ${TARGET}..." && \

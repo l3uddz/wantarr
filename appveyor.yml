@@ -7,6 +7,9 @@ branches:
     - master
     - develop
 
+artifacts:
+  - path: dist
+
 install:
   - go version
   - go env
