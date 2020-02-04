@@ -21,6 +21,5 @@ install:
 build_script:
   - make build
   - export build=$(find dist/* -type d | sed 's!.*/!!')
-  - echo $build
   - cd dist/$build
   - tar -czf $build.tgz wantarr
