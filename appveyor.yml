@@ -8,7 +8,7 @@ branches:
     - develop
 
 artifacts:
-  - path: dist/$(BUILD_PATH)
+  - path: $(BUILD_PATH)
 
 install:
   - go version
