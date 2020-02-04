@@ -11,6 +11,12 @@ branches:
 
 artifacts:
   - path: dist/**
+    name: binary
+
+deploy:
+  artifact: .*
+  on:
+    branch: develop
 
 install:
   - go version
