@@ -1,5 +1,7 @@
-image: Ubuntu1804
-
+image:
+  - Ubuntu1804
+  - macOS
+  - Visual Studio 2019
 platform: x64
 
 branches:
@@ -8,12 +10,11 @@ branches:
     - develop
 
 artifacts:
-  - path: $(BUILD_PATH)
+  - path: dist
 
 install:
   - go version
   - go env
-  - echo $PATH
   - make vendor
 
 build_script:
