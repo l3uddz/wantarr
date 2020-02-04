@@ -10,7 +10,7 @@ branches:
     - develop
 
 artifacts:
-  - path: dist/**/*.tgz
+  - path: dist/**/*.tar.tgz
     name: wantarr
 
 install:
@@ -22,4 +22,4 @@ build_script:
   - make build
   - export build=$(find dist/* -type d | sed 's!.*/!!')
   - cd dist/$build
-  - tar -czf $build.tgz wantarr
+  - tar -czf $build.tar.tgz wantarr
