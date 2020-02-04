@@ -14,4 +14,4 @@ install:
   - go get github.com/karalabe/xgo
 
 build_script:
-  - xgo -targets='linux/amd64,darwin/amd64,windows/amd64' .
+  - xgo -targets='linux/amd64,darwin/amd64,windows/amd64' /home/appveyor/projects/wantarr
