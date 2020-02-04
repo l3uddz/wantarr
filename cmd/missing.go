@@ -111,7 +111,7 @@ var missingCmd = &cobra.Command{
 
 			// dont search this item if we already searched it within N days
 			if item.LastSearchDateUtc != nil && !item.LastSearchDateUtc.IsZero() {
-				retryAfterDate := item.LastSearchDateUtc.Add((24 * pvrConfig.RetryDaysAge.Missing) * time.Hour)
+				retryAfterDate := item.LastSearchDateUtc.Add((24 * time.Hour) * pvrConfig.RetryDaysAge.Missing)
 				if time.Now().UTC().Before(retryAfterDate) {
 					log.WithField("retry_min_date", retryAfterDate).
 						Tracef("Skipping media item %v until allowed retry date", item.Id)
@@ -133,7 +133,7 @@ var missingCmd = &cobra.Command{
 
 			// do search
 			log.WithFields(logrus.Fields{
-				"search_items":   batchedItemsCount,
+				"search_items": batchedItemsCount,
 			}).Info("Searching...")
 
 			searchedItemsCount += batchedItemsCount
@@ -164,7 +164,7 @@ var missingCmd = &cobra.Command{
 		if continueRunning.Load() && len(searchItems) > 0 {
 			// search items
 			log.WithFields(logrus.Fields{
-				"search_items":   len(searchItems),
+				"search_items": len(searchItems),
 			}).Info("Searching...")
 
 			searchedItemsCount += len(searchItems)
