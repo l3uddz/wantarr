@@ -15,6 +15,7 @@ artifacts:
 install:
   - go version
   - go env
+  - make vendor
 
 build_script:
   - make build
