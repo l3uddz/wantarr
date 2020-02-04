@@ -1,4 +1,4 @@
-image: Ubuntu
+image: Ubuntu1804
 
 platform: x64
 
@@ -7,7 +7,8 @@ branches:
     - master
     - develop
 
-clone_folder: c:\gopath\src\github.com\l3uddz\wantarr
+#clone_folder: c:\gopath\src\github.com\l3uddz\wantarr
+clone_folder: /root/src/github.com/l3uddz/wantarr
 
 environment:
   GOPATH: c:\gopath
