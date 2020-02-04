@@ -2,6 +2,7 @@ image:
 #  - Ubuntu1804
 #  - macOS
   - Visual Studio 2015
+
 platform: x64
 
 branches:
