@@ -10,7 +10,7 @@ branches:
     - develop
 
 artifacts:
-  - path: 'dist/$(CMD)_$(TARGET)'
+  - path: dist/$CMD_$TARGET
 
 install:
   - go version
