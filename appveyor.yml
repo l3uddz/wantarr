@@ -1,3 +1,5 @@
+image: Ubuntu
+
 platform: x64
 
 branches:
