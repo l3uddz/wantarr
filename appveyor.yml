@@ -8,9 +8,8 @@ branches:
     - develop
 
 install:
-  - echo %PATH%
-  - echo %GOPATH%
-  - set PATH=%GOPATH%\bin;c:\go\bin;%PATH%
+  - echo $PATH
+  - echo $GOPATH
   - go version
   - go env
 
