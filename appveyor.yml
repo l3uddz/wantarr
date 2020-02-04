@@ -8,10 +8,10 @@ branches:
     - develop
 
 install:
-  - echo $PATH
-  - echo $GOPATH
   - go version
   - go env
+  - echo $PATH
+  - go get github.com/karalabe/xgo
 
 build_script:
-  - make build-all
+  - xgo -targets='linux/amd64,darwin/amd64,windows/amd64' .
