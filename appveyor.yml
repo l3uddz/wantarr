@@ -15,6 +15,7 @@ artifacts:
 install:
   - go version
   - go env
+  - cinst make
   - make vendor
 
 build_script:
