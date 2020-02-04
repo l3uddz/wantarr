@@ -17,7 +17,7 @@ install:
   - go env
   - cinst make
   - cinst mingw
-  - ps: refreshenv
+  - cinst sqlite
   - make vendor
 
 build_script:
