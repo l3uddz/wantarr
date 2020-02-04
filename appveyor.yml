@@ -1,6 +1,6 @@
 image:
-  - Ubuntu1804
-  - macOS
+#  - Ubuntu1804
+#  - macOS
   - Visual Studio 2019
 platform: x64
 
@@ -17,6 +17,7 @@ install:
   - go env
   - cinst make
   - cinst mingw
+  - ps: refreshenv
   - make vendor
 
 build_script:
