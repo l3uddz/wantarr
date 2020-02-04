@@ -8,12 +8,13 @@ branches:
     - develop
 
 artifacts:
-  - path: dist
+  - path: dist/*
 
 install:
   - go version
   - go env
   - echo $PATH
+  - make vendor
 
 build_script:
   - make build
