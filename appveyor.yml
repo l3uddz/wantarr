@@ -16,6 +16,7 @@ install:
   - go version
   - go env
   - cinst make
+  - cinst mingw
   - make vendor
 
 build_script:
