@@ -21,6 +21,9 @@ deploy:
       branch: master
       APPVEYOR_REPO_TAG: true
 
+cache:
+  - vendor -> go.mod
+
 artifacts:
   - path: dist/**/*.tar.tgz
     name: wantarr
@@ -28,7 +31,6 @@ artifacts:
 install:
   - go version
   - go env
-  - make vendor
 
 build_script:
   - |-
