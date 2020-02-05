@@ -6,8 +6,6 @@ image:
 
 platform: x64
 
-clone_folder: /usr/go/src/github.com/l3uddz/wantarr
-
 branches:
   only:
     - master
@@ -23,15 +21,15 @@ deploy:
       branch: master
       APPVEYOR_REPO_TAG: true
 
-cache:
-  - vendor -> go.mod, appveyor.yml
+# no need for caching as it does not appear to work right now
+#cache:
+#  - vendor -> go.mod, appveyor.yml
 
 artifacts:
   - path: dist/**/*.tar.tgz
     name: wantarr
 
 environment:
-  GOPATH: /usr/go/
   GO111MODULE: on
 
 install:
