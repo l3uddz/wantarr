@@ -15,6 +15,9 @@ deploy:
       secure: japCKJyRSrHvPJV0hqZZGcRM9ZSR9GsTVh8SCCwbqiyuKTyB3OCcRMc6ICztczfV
     artifact: wantarr
     force_update: true
+    on:
+      branch: master
+      APPVEYOR_REPO_TAG: true
 
 artifacts:
   - path: dist/**/*.tar.tgz
