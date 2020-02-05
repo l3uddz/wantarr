@@ -35,8 +35,8 @@ pvr:
 
 ## Examples
 
-`wantarr missing radarr -v -m 20`
-`wantarr cutoff radarr4k -v -m 20`
+- `wantarr missing radarr -v -m 20`
+- `wantarr cutoff radarr4k -v -m 20`
 
 ## Notes
 
