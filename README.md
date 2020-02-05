@@ -1,7 +1,9 @@
 # wantarr
 
-A simple CLI tool that can be used to search for media that is
-missing or cutoff unmet.
+A simple CLI tool that can be used to search for wanted media in:
+
+- Sonarr
+- Radarr
 
 Once an item has been searched, it will not be searched again until the retry days setting has been reached.
 
