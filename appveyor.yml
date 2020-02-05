@@ -1,0 +1,52 @@
+version: 1.0.{build}
+
+image:
+  - Ubuntu1804
+  - macOS
+
+platform: x64
+
+branches:
+  only:
+    - master
+    - develop
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: japCKJyRSrHvPJV0hqZZGcRM9ZSR9GsTVh8SCCwbqiyuKTyB3OCcRMc6ICztczfV
+    artifact: wantarr
+    force_update: true
+    on:
+      branch: master
+      APPVEYOR_REPO_TAG: true
+
+cache:
+  - vendor -> go.mod, appveyor.yml
+
+artifacts:
+  - path: dist/**/*.tar.tgz
+    name: wantarr
+
+environment:
+  GO111MODULE: on
+
+install:
+  - go version
+  - go env
+
+before_build:
+  - |-
+    if [ ${APPVEYOR_REPO_TAG} = "true" ]; then
+      export VERSION=${APPVEYOR_REPO_TAG_NAME}
+    fi
+
+build_script:
+  - make build
+
+after_build:
+  - |-
+    export build=$(find dist/* -type d | sed 's!.*/!!')
+    cd dist/$build
+    tar -czf $build.tar.tgz wantarr
+    cd ../..
