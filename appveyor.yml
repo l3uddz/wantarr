@@ -9,6 +9,13 @@ branches:
     - master
     - develop
 
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: japCKJyRSrHvPJV0hqZZGcRM9ZSR9GsTVh8SCCwbqiyuKTyB3OCcRMc6ICztczfV
+    artifact: wantarr
+    force_update: true
+
 artifacts:
   - path: dist/**/*.tar.tgz
     name: wantarr
