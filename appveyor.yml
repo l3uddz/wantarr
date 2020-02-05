@@ -31,7 +31,12 @@ install:
   - make vendor
 
 build_script:
-  - make build
-  - export build=$(find dist/* -type d | sed 's!.*/!!')
-  - cd dist/$build
-  - tar -czf $build.tar.tgz wantarr
+  - |-
+    if [ ${APPVEYOR_REPO_TAG} = "true" ]; then
+      export VERSION=${APPVEYOR_REPO_TAG_NAME}
+    fi
+    make build
+  - |-
+    export build=$(find dist/* -type d | sed 's!.*/!!')
+    cd dist/$build
+    tar -czf $build.tar.tgz wantarr
