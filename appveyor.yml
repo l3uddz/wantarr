@@ -6,6 +6,8 @@ image:
 
 platform: x64
 
+clone_folder: /usr/go/src/github.com/$username/$project
+
 branches:
   only:
     - master
@@ -29,6 +31,7 @@ artifacts:
     name: wantarr
 
 environment:
+  GOPATH: /usr/go/
   GO111MODULE: on
 
 install:
