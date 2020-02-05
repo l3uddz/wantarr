@@ -6,7 +6,7 @@ image:
 
 platform: x64
 
-clone_folder: /usr/go/src/github.com/$username/$project
+clone_folder: /usr/go/src/github.com/l3uddz/wantarr
 
 branches:
   only:
