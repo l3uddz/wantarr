@@ -13,6 +13,7 @@ GO_PACKAGES    := $(shell go list -mod vendor ./...)
 GIT_COMMIT     := $(shell git rev-parse --short HEAD)
 GIT_BRANCH     := $(shell git symbolic-ref --short HEAD)
 TIMESTAMP      := $(shell date +%s)
+VERSION        ?= 0.0.0-dev
 
 # Deps
 .PHONY: check_golangci
@@ -58,7 +59,7 @@ ${BUILD_PATH}/${CMD}: ${GO_FILES} go.sum
 	CGO_ENABLED=1 go build \
 		-mod vendor \
 		-trimpath \
-		-ldflags "-s -w -X github.com/l3uddz/wantarr/build.Version=0.0.0-dev -X github.com/l3uddz/wantarr/build.GitCommit=${GIT_COMMIT} -X github.com/l3uddz/wantarr/build.Timestamp=${TIMESTAMP}" \
+		-ldflags "-s -w -X github.com/l3uddz/wantarr/build.Version=${VERSION} -X github.com/l3uddz/wantarr/build.GitCommit=${GIT_COMMIT} -X github.com/l3uddz/wantarr/build.Timestamp=${TIMESTAMP}" \
 		-o ${BUILD_PATH}/${CMD} \
 		.
 
