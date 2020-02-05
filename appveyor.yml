@@ -22,11 +22,14 @@ deploy:
       APPVEYOR_REPO_TAG: true
 
 cache:
-  - vendor -> go.mod
+  - vendor -> go.mod, appveyor.yml
 
 artifacts:
   - path: dist/**/*.tar.tgz
     name: wantarr
+
+environment:
+  GO111MODULE: on
 
 install:
   - go version
