@@ -3,15 +3,13 @@ CMD            := wantarr
 GOARCH         := $(shell go env GOARCH)
 GOOS           := $(shell go env GOOS)
 TARGET         := ${GOOS}_${GOARCH}
-PLATFORMS      := darwin linux
-ARCHITECTURES  := amd64
 DIST_PATH      := dist
 BUILD_PATH     := ${DIST_PATH}/${CMD}_${TARGET}
 DESTDIR        := /usr/local/bin
 GO_FILES       := $(shell find . -path ./vendor -prune -or -type f -name '*.go' -print)
 GO_PACKAGES    := $(shell go list -mod vendor ./...)
 GIT_COMMIT     := $(shell git rev-parse --short HEAD)
-GIT_BRANCH     := $(shell git symbolic-ref --short HEAD)
+# GIT_BRANCH     := $(shell git symbolic-ref --short HEAD)
 TIMESTAMP      := $(shell date +%s)
 VERSION        ?= 0.0.0-dev
 
