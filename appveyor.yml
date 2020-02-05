@@ -42,3 +42,4 @@ build_script:
     export build=$(find dist/* -type d | sed 's!.*/!!')
     cd dist/$build
     tar -czf $build.tar.tgz wantarr
+    cd ../..
