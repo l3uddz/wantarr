@@ -35,12 +35,16 @@ install:
   - go version
   - go env
 
-build_script:
+before_build:
   - |-
     if [ ${APPVEYOR_REPO_TAG} = "true" ]; then
       export VERSION=${APPVEYOR_REPO_TAG_NAME}
     fi
-    make build
+
+build_script:
+  - make build
+
+after_build:
   - |-
     export build=$(find dist/* -type d | sed 's!.*/!!')
     cd dist/$build
