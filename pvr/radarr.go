@@ -23,9 +23,10 @@ type Radarr struct {
 }
 
 type RadarrMovie struct {
-	Id            int
-	AirDateUtc    time.Time `json:"inCinemas"`
-	Monitored     bool
+	Id         int
+	AirDateUtc time.Time `json:"inCinemas"`
+	Status     string
+	Monitored  bool
 }
 
 type RadarrWanted struct {
@@ -54,7 +55,7 @@ type RadarrCommandResponse struct {
 }
 
 type RadarrMovieSearch struct {
-	Name     string `json:"name"`
+	Name   string `json:"name"`
 	Movies []int  `json:"movieIds"`
 }
 
@@ -227,6 +228,11 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 		// process response
 		lastPageSize = len(m.Records)
 		for _, movie := range m.Records {
+			// is the status released?
+			if movie.Status != "released" {
+				continue
+			}
+
 			// store this movie
 			airDate := movie.AirDateUtc
 			wantedMissing = append(wantedMissing, MediaItem{
@@ -326,7 +332,7 @@ func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 func (p *Radarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	// set request data
 	payload := RadarrMovieSearch{
-		Name:     "moviesSearch",
+		Name:   "moviesSearch",
 		Movies: mediaItemIds,
 	}
 
