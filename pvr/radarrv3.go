@@ -26,8 +26,6 @@ type RadarrV3Movie struct {
 	Id          int
 	AirDateUtc  time.Time `json:"inCinemas"`
 	Status      string
-	HasFile     bool
-	IsAvailable bool
 	Monitored   bool
 }
 
@@ -50,6 +48,15 @@ type RadarrV3CommandResponse struct {
 type RadarrV3MovieSearch struct {
 	Name   string `json:"name"`
 	Movies []int  `json:"movieIds"`
+}
+
+type RadarrV3Wanted struct {
+	Page          int
+	PageSize      int
+	SortKey       string
+	SortDirection string
+	TotalRecords  int
+	Records       []RadarrV3Movie
 }
 
 /* Initializer */
@@ -176,64 +183,148 @@ func (p *RadarrV3) GetWantedMissing() ([]MediaItem, error) {
 	totalRecords := 0
 	var wantedMissing []MediaItem
 
+	page := 1
+	lastPageSize := pvrDefaultPageSize
+
+	// set params
+	params := req.QueryParam{
+		"pageSize":  pvrDefaultPageSize,
+		"monitored": "true",
+	}
+
 	// retrieve all page results
 	p.log.Info("Retrieving wanted missing media...")
 
-	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/movie"), 15,
-		p.reqHeaders, &pvrDefaultRetry)
-	if err != nil {
-		return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from radarr")
-	}
-	defer resp.Response().Body.Close()
-
-	// validate response
-	if resp.Response().StatusCode != 200 {
-		return nil, fmt.Errorf("failed retrieving valid wanted missing api response from radarr: %s",
-			resp.Response().Status)
-	}
-
-	// decode response
-	var m []RadarrV3Movie
-	if err := resp.ToJSON(&m); err != nil {
-		return nil, errors.WithMessage(err, "failed decoding wanted missing api response from radarr")
-	}
-
-	// process response
-	for _, movie := range m {
-		// is movie monitored?
-		if !movie.Monitored {
-			continue
-		}
-		// is movie available?
-		if !movie.IsAvailable {
-			continue
-		}
-		// is the status released?
-		if movie.Status != "released" {
-			continue
-		}
-		// do we have the file?
-		if movie.HasFile {
-			continue
+	for {
+		// break loop when all pages retrieved
+		if lastPageSize < pvrDefaultPageSize {
+			break
 		}
 
-		// store this movie
-		airDate := movie.AirDateUtc
-		wantedMissing = append(wantedMissing, MediaItem{
-			ItemId:     movie.Id,
-			AirDateUtc: airDate,
-			LastSearch: time.Time{},
-		})
+		// set page
+		params["page"] = page
+
+		// send request
+		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
+			p.reqHeaders, &pvrDefaultRetry, params)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from radarr")
+		}
+
+		// validate response
+		if resp.Response().StatusCode != 200 {
+			_ = resp.Response().Body.Close()
+			return nil, fmt.Errorf("failed retrieving valid wanted missing api response from radarr: %s",
+				resp.Response().Status)
+		}
+
+		// decode response
+		var m RadarrV3Wanted
+		if err := resp.ToJSON(&m); err != nil {
+			_ = resp.Response().Body.Close()
+			return nil, errors.WithMessage(err, "failed decoding wanted missing api response from radarr")
+		}
+
+		// process response
+		lastPageSize = len(m.Records)
+		for _, movie := range m.Records {
+			// is this movie released?
+			if movie.Status != "released" {
+				continue
+			}
+
+			// store this movie
+			airDate := movie.AirDateUtc
+			wantedMissing = append(wantedMissing, MediaItem{
+				ItemId:     movie.Id,
+				AirDateUtc: airDate,
+				LastSearch: time.Time{},
+			})
+		}
+		totalRecords += lastPageSize
+
+		p.log.WithField("page", page).Debug("Retrieved")
+		page += 1
+
+		// close response
+		_ = resp.Response().Body.Close()
 	}
-	totalRecords = len(wantedMissing)
 
 	p.log.WithField("media_items", totalRecords).Info("Finished")
+
 	return wantedMissing, nil
 }
 
 func (p *RadarrV3) GetWantedCutoff() ([]MediaItem, error) {
-	return nil, errors.New("currently not implemented")
+	// logic vars
+	totalRecords := 0
+	var wantedCutoff []MediaItem
+
+	page := 1
+	lastPageSize := pvrDefaultPageSize
+
+	// set params
+	params := req.QueryParam{
+		"pageSize":  pvrDefaultPageSize,
+		"monitored": "true",
+	}
+
+	// retrieve all page results
+	p.log.Info("Retrieving wanted cutoff unmet media...")
+
+	for {
+		// break loop when all pages retrieved
+		if lastPageSize < pvrDefaultPageSize {
+			break
+		}
+
+		// set page
+		params["page"] = page
+
+		// send request
+		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
+			p.reqHeaders, &pvrDefaultRetry, params)
+		if err != nil {
+			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from radarr")
+		}
+
+		// validate response
+		if resp.Response().StatusCode != 200 {
+			_ = resp.Response().Body.Close()
+			return nil, fmt.Errorf("failed retrieving valid wanted cutoff unmet api response from radarr: %s",
+				resp.Response().Status)
+		}
+
+		// decode response
+		var m RadarrV3Wanted
+		if err := resp.ToJSON(&m); err != nil {
+			_ = resp.Response().Body.Close()
+			return nil, errors.WithMessage(err, "failed decoding wanted cutoff unmet api response from radarr")
+		}
+
+		// process response
+		lastPageSize = len(m.Records)
+		for _, movie := range m.Records {
+			// store this movie
+			airDate := movie.AirDateUtc
+			wantedCutoff = append(wantedCutoff, MediaItem{
+				ItemId:     movie.Id,
+				AirDateUtc: airDate,
+				LastSearch: time.Time{},
+			})
+		}
+		totalRecords += lastPageSize
+
+		p.log.WithField("page", page).Debug("Retrieved")
+		page += 1
+
+		// close response
+		_ = resp.Response().Body.Close()
+	}
+
+	p.log.WithField("media_items", totalRecords).Info("Finished")
+
+	return wantedCutoff, nil
 }
 
 func (p *RadarrV3) SearchMediaItems(mediaItemIds []int) (bool, error) {
