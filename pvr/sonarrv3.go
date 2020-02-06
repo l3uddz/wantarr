@@ -190,6 +190,7 @@ func (p *SonarrV3) GetWantedMissing() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
+		"sortKey": "airDateUtc",
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
@@ -262,6 +263,7 @@ func (p *SonarrV3) GetWantedCutoff() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
+		"sortKey": "airDateUtc",
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
