@@ -188,8 +188,6 @@ func (p *RadarrV2) GetWantedMissing() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey":   pvrDefaultSortKey,
-		"sortDir":   pvrDefaultSortDirection,
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
@@ -267,8 +265,6 @@ func (p *RadarrV2) GetWantedCutoff() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey":   pvrDefaultSortKey,
-		"sortDir":   pvrDefaultSortDirection,
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}

@@ -11,8 +11,6 @@ import (
 
 var (
 	pvrDefaultPageSize      = 1000
-	pvrDefaultSortKey       = "airDateUtc"
-	pvrDefaultSortDirection = "desc"
 	pvrDefaultRetry         = web.Retry{
 		MaxAttempts:          5,
 		RetryableStatusCodes: []int{},
