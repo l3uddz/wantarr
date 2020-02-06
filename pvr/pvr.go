@@ -11,8 +11,6 @@ import (
 
 var (
 	pvrDefaultPageSize      = 1000
-	pvrDefaultSortKey       = "airDateUtc"
-	pvrDefaultSortDirection = "desc"
 	pvrDefaultRetry         = web.Retry{
 		MaxAttempts:          5,
 		RetryableStatusCodes: []int{},
@@ -43,10 +41,12 @@ type Interface interface {
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {
 
 	switch strings.ToLower(pvrType) {
-	case "sonarr":
-		return NewSonarr(pvrName, pvrConfig), nil
-	case "radarr":
-		return NewRadarr(pvrName, pvrConfig), nil
+	case "sonarr_v3":
+		return NewSonarrV3(pvrName, pvrConfig), nil
+	case "radarr_v2":
+		return NewRadarrV2(pvrName, pvrConfig), nil
+	case "radarr_v3":
+		return NewRadarrV3(pvrName, pvrConfig), nil
 	default:
 		break
 	}

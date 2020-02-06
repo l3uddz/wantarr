@@ -12,21 +12,21 @@ Once an item has been searched, it will not be searched again until the retry da
 ```yaml
 pvr:
   sonarr:
-    type: sonarr
+    type: sonarr_v3
     url: https://sonarr.domain.com
     api_key: YOUR_API_KEY
     retry_days_age:
       missing: 90
       cutoff: 90
   radarr:
-    type: radarr
+    type: radarr_v2
     url: https://radarr.domain.com
     api_key: YOUR_API_KEY
     retry_days_age:
       missing: 90
       cutoff: 90
   radarr4k:
-    type: radarr
+    type: radarr_v3
     url: https://radarr.domain.com
     api_key: YOUR_API_KEY
     retry_days_age:
@@ -48,4 +48,5 @@ Supported Sonarr Version(s):
 
 Supported Radarr Version(s):
 
-- 0.2
+- 2
+- 3
