@@ -329,7 +329,7 @@ func (p *RadarrV3) GetWantedCutoff() ([]MediaItem, error) {
 
 func (p *RadarrV3) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	// set request data
-	payload := RadarrMovieSearch{
+	payload := RadarrV2MovieSearch{
 		Name:   "moviesSearch",
 		Movies: mediaItemIds,
 	}
@@ -349,7 +349,7 @@ func (p *RadarrV3) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	}
 
 	// decode response
-	var q RadarrCommandResponse
+	var q RadarrV2CommandResponse
 	if err := resp.ToJSON(&q); err != nil {
 		return false, errors.WithMessage(err, "failed decoding command api response from radarr")
 	}
