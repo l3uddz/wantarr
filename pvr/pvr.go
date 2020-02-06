@@ -39,7 +39,6 @@ type Interface interface {
 /* Public */
 
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {
-
 	switch strings.ToLower(pvrType) {
 	case "sonarr_v3":
 		return NewSonarrV3(pvrName, pvrConfig), nil

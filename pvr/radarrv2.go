@@ -19,7 +19,6 @@ type RadarrV2 struct {
 	log        *logrus.Entry
 	apiUrl     string
 	reqHeaders req.Header
-	version    int
 }
 
 type RadarrV2Movie struct {
@@ -145,7 +144,7 @@ func (p *RadarrV2) Init() error {
 	// determine version
 	switch status.Version[0:3] {
 	case "0.2":
-		p.version = 2
+		break
 	default:
 		return fmt.Errorf("unsupported version of radarr pvr: %s", status.Version)
 	}

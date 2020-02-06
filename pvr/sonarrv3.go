@@ -19,7 +19,6 @@ type SonarrV3 struct {
 	log        *logrus.Entry
 	apiUrl     string
 	reqHeaders req.Header
-	version    int
 }
 
 type SonarrV3Queue struct {
@@ -148,7 +147,7 @@ func (p *SonarrV3) Init() error {
 	// determine version
 	switch status.Version[0:1] {
 	case "3":
-		p.version = 3
+		break
 	default:
 		return fmt.Errorf("unsupported version of sonarr pvr: %s", status.Version)
 	}
