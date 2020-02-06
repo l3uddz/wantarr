@@ -87,7 +87,8 @@ func NewRadarr(name string, c *config.Pvr) *Radarr {
 
 func (p *Radarr) getSystemStatus() (*RadarrSystemStatus, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders,
+		&pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving system status api response from radarr")
 	}
@@ -111,7 +112,7 @@ func (p *Radarr) getSystemStatus() (*RadarrSystemStatus, error) {
 func (p *Radarr) getCommandStatus(id int) (*RadarrCommandStatus, error) {
 	// send request
 	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), 15,
-		p.reqHeaders)
+		p.reqHeaders, &pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving command status api response from radarr")
 	}
@@ -153,7 +154,8 @@ func (p *Radarr) Init() error {
 
 func (p *Radarr) GetQueueSize() (int, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders,
+		&pvrDefaultRetry)
 	if err != nil {
 		return 0, errors.WithMessage(err, "failed retrieving queue api response from radarr")
 	}
@@ -206,7 +208,7 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
-			p.reqHeaders, params)
+			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from radarr")
 		}
@@ -285,7 +287,7 @@ func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
-			p.reqHeaders, params)
+			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from radarr")
 		}
@@ -338,7 +340,7 @@ func (p *Radarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 
 	// send request
 	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), 15, p.reqHeaders,
-		req.BodyJSON(&payload))
+		&pvrDefaultRetry, req.BodyJSON(&payload))
 	if err != nil {
 		return false, errors.WithMessage(err, "failed retrieving command api response from radarr")
 	}

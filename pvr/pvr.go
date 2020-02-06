@@ -2,7 +2,9 @@ package pvr
 
 import (
 	"fmt"
+	"github.com/jpillora/backoff"
 	"github.com/l3uddz/wantarr/config"
+	"github.com/l3uddz/wantarr/utils/web"
 	"strings"
 	"time"
 )
@@ -11,6 +13,15 @@ var (
 	pvrDefaultPageSize      = 1000
 	pvrDefaultSortKey       = "airDateUtc"
 	pvrDefaultSortDirection = "desc"
+	pvrDefaultRetry         = web.Retry{
+		MaxAttempts:          5,
+		RetryableStatusCodes: []int{},
+		Backoff: backoff.Backoff{
+			Jitter: true,
+			Min:    1 * time.Second,
+			Max:    5 * time.Second,
+		},
+	}
 )
 
 type MediaItem struct {

@@ -27,9 +27,9 @@ type SonarrQueue struct {
 }
 
 type SonarrEpisode struct {
-	Id            int
-	AirDateUtc    time.Time
-	Monitored     bool
+	Id         int
+	AirDateUtc time.Time
+	Monitored  bool
 }
 
 type SonarrWanted struct {
@@ -90,7 +90,8 @@ func NewSonarr(name string, c *config.Pvr) *Sonarr {
 
 func (p *Sonarr) getSystemStatus() (*SonarrSystemStatus, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders,
+		&pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving system status api response from sonarr")
 	}
@@ -114,7 +115,7 @@ func (p *Sonarr) getSystemStatus() (*SonarrSystemStatus, error) {
 func (p *Sonarr) getCommandStatus(id int) (*SonarrCommandStatus, error) {
 	// send request
 	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), 15,
-		p.reqHeaders)
+		p.reqHeaders, &pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving command status api response from sonarr")
 	}
@@ -156,7 +157,8 @@ func (p *Sonarr) Init() error {
 
 func (p *Sonarr) GetQueueSize() (int, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders,
+		&pvrDefaultRetry)
 	if err != nil {
 		return 0, errors.WithMessage(err, "failed retrieving queue api response from sonarr")
 	}
@@ -208,7 +210,7 @@ func (p *Sonarr) GetWantedMissing() ([]MediaItem, error) {
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
-			p.reqHeaders, params)
+			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from sonarr")
 		}
@@ -282,7 +284,7 @@ func (p *Sonarr) GetWantedCutoff() ([]MediaItem, error) {
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
-			p.reqHeaders, params)
+			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from sonarr")
 		}
@@ -335,7 +337,7 @@ func (p *Sonarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 
 	// send request
 	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), 15, p.reqHeaders,
-		req.BodyJSON(&payload))
+		&pvrDefaultRetry, req.BodyJSON(&payload))
 	if err != nil {
 		return false, errors.WithMessage(err, "failed retrieving command api response from sonarr")
 	}
