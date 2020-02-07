@@ -2,15 +2,24 @@ package pvr
 
 import (
 	"fmt"
+	"github.com/jpillora/backoff"
 	"github.com/l3uddz/wantarr/config"
+	"github.com/l3uddz/wantarr/utils/web"
 	"strings"
 	"time"
 )
 
 var (
 	pvrDefaultPageSize      = 1000
-	pvrDefaultSortKey       = "airDateUtc"
-	pvrDefaultSortDirection = "desc"
+	pvrDefaultRetry         = web.Retry{
+		MaxAttempts:          5,
+		RetryableStatusCodes: []int{},
+		Backoff: backoff.Backoff{
+			Jitter: true,
+			Min:    1 * time.Second,
+			Max:    5 * time.Second,
+		},
+	}
 )
 
 type MediaItem struct {
@@ -30,12 +39,13 @@ type Interface interface {
 /* Public */
 
 func Get(pvrName string, pvrType string, pvrConfig *config.Pvr) (Interface, error) {
-
 	switch strings.ToLower(pvrType) {
-	case "sonarr":
-		return NewSonarr(pvrName, pvrConfig), nil
-	case "radarr":
-		return NewRadarr(pvrName, pvrConfig), nil
+	case "sonarr_v3":
+		return NewSonarrV3(pvrName, pvrConfig), nil
+	case "radarr_v2":
+		return NewRadarrV2(pvrName, pvrConfig), nil
+	case "radarr_v3":
+		return NewRadarrV3(pvrName, pvrConfig), nil
 	default:
 		break
 	}

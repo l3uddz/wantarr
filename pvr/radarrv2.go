@@ -14,34 +14,34 @@ import (
 
 /* Structs */
 
-type Radarr struct {
+type RadarrV2 struct {
 	cfg        *config.Pvr
 	log        *logrus.Entry
 	apiUrl     string
 	reqHeaders req.Header
-	version    int
 }
 
-type RadarrMovie struct {
-	Id            int
-	AirDateUtc    time.Time `json:"inCinemas"`
-	Monitored     bool
+type RadarrV2Movie struct {
+	Id         int
+	AirDateUtc time.Time `json:"inCinemas"`
+	Status     string
+	Monitored  bool
 }
 
-type RadarrWanted struct {
+type RadarrV2Wanted struct {
 	Page          int
 	PageSize      int
 	SortKey       string
 	SortDirection string
 	TotalRecords  int
-	Records       []RadarrMovie
+	Records       []RadarrV2Movie
 }
 
-type RadarrSystemStatus struct {
+type RadarrV2SystemStatus struct {
 	Version string
 }
 
-type RadarrCommandStatus struct {
+type RadarrV2CommandStatus struct {
 	Name    string
 	Message string
 	Started time.Time
@@ -49,18 +49,18 @@ type RadarrCommandStatus struct {
 	Status  string
 }
 
-type RadarrCommandResponse struct {
+type RadarrV2CommandResponse struct {
 	Id int
 }
 
-type RadarrMovieSearch struct {
-	Name     string `json:"name"`
+type RadarrV2MovieSearch struct {
+	Name   string `json:"name"`
 	Movies []int  `json:"movieIds"`
 }
 
 /* Initializer */
 
-func NewRadarr(name string, c *config.Pvr) *Radarr {
+func NewRadarrV2(name string, c *config.Pvr) *RadarrV2 {
 	// set api url
 	apiUrl := ""
 	if strings.Contains(c.URL, "/api") {
@@ -74,7 +74,7 @@ func NewRadarr(name string, c *config.Pvr) *Radarr {
 		"X-Api-Key": c.ApiKey,
 	}
 
-	return &Radarr{
+	return &RadarrV2{
 		cfg:        c,
 		log:        logger.GetLogger(name),
 		apiUrl:     apiUrl,
@@ -84,9 +84,10 @@ func NewRadarr(name string, c *config.Pvr) *Radarr {
 
 /* Private */
 
-func (p *Radarr) getSystemStatus() (*RadarrSystemStatus, error) {
+func (p *RadarrV2) getSystemStatus() (*RadarrV2SystemStatus, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders,
+		&pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving system status api response from radarr")
 	}
@@ -99,7 +100,7 @@ func (p *Radarr) getSystemStatus() (*RadarrSystemStatus, error) {
 	}
 
 	// decode response
-	var s RadarrSystemStatus
+	var s RadarrV2SystemStatus
 	if err := resp.ToJSON(&s); err != nil {
 		return nil, errors.WithMessage(err, "failed decoding system status api response from radarr")
 	}
@@ -107,10 +108,10 @@ func (p *Radarr) getSystemStatus() (*RadarrSystemStatus, error) {
 	return &s, nil
 }
 
-func (p *Radarr) getCommandStatus(id int) (*RadarrCommandStatus, error) {
+func (p *RadarrV2) getCommandStatus(id int) (*RadarrV2CommandStatus, error) {
 	// send request
 	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), 15,
-		p.reqHeaders)
+		p.reqHeaders, &pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving command status api response from radarr")
 	}
@@ -123,7 +124,7 @@ func (p *Radarr) getCommandStatus(id int) (*RadarrCommandStatus, error) {
 	}
 
 	// decode response
-	var s RadarrCommandStatus
+	var s RadarrV2CommandStatus
 	if err := resp.ToJSON(&s); err != nil {
 		return nil, errors.WithMessage(err, "failed decoding command status api response from radarr")
 	}
@@ -133,7 +134,7 @@ func (p *Radarr) getCommandStatus(id int) (*RadarrCommandStatus, error) {
 
 /* Interface Implements */
 
-func (p *Radarr) Init() error {
+func (p *RadarrV2) Init() error {
 	// retrieve system status
 	status, err := p.getSystemStatus()
 	if err != nil {
@@ -143,16 +144,17 @@ func (p *Radarr) Init() error {
 	// determine version
 	switch status.Version[0:3] {
 	case "0.2":
-		p.version = 2
+		break
 	default:
 		return fmt.Errorf("unsupported version of radarr pvr: %s", status.Version)
 	}
 	return nil
 }
 
-func (p *Radarr) GetQueueSize() (int, error) {
+func (p *RadarrV2) GetQueueSize() (int, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders)
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders,
+		&pvrDefaultRetry)
 	if err != nil {
 		return 0, errors.WithMessage(err, "failed retrieving queue api response from radarr")
 	}
@@ -175,7 +177,7 @@ func (p *Radarr) GetQueueSize() (int, error) {
 	return queueSize, nil
 }
 
-func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
+func (p *RadarrV2) GetWantedMissing() ([]MediaItem, error) {
 	// logic vars
 	totalRecords := 0
 	var wantedMissing []MediaItem
@@ -185,8 +187,6 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey":   pvrDefaultSortKey,
-		"sortDir":   pvrDefaultSortDirection,
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
@@ -205,7 +205,7 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
-			p.reqHeaders, params)
+			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from radarr")
 		}
@@ -218,7 +218,7 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 		}
 
 		// decode response
-		var m RadarrWanted
+		var m RadarrV2Wanted
 		if err := resp.ToJSON(&m); err != nil {
 			_ = resp.Response().Body.Close()
 			return nil, errors.WithMessage(err, "failed decoding wanted missing api response from radarr")
@@ -227,6 +227,11 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 		// process response
 		lastPageSize = len(m.Records)
 		for _, movie := range m.Records {
+			// is the status released?
+			if movie.Status != "released" {
+				continue
+			}
+
 			// store this movie
 			airDate := movie.AirDateUtc
 			wantedMissing = append(wantedMissing, MediaItem{
@@ -249,7 +254,7 @@ func (p *Radarr) GetWantedMissing() ([]MediaItem, error) {
 	return wantedMissing, nil
 }
 
-func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
+func (p *RadarrV2) GetWantedCutoff() ([]MediaItem, error) {
 	// logic vars
 	totalRecords := 0
 	var wantedCutoff []MediaItem
@@ -259,8 +264,6 @@ func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey":   pvrDefaultSortKey,
-		"sortDir":   pvrDefaultSortDirection,
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
@@ -279,7 +282,7 @@ func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 
 		// send request
 		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
-			p.reqHeaders, params)
+			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from radarr")
 		}
@@ -292,7 +295,7 @@ func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 		}
 
 		// decode response
-		var m RadarrWanted
+		var m RadarrV2Wanted
 		if err := resp.ToJSON(&m); err != nil {
 			_ = resp.Response().Body.Close()
 			return nil, errors.WithMessage(err, "failed decoding wanted cutoff unmet api response from radarr")
@@ -323,16 +326,16 @@ func (p *Radarr) GetWantedCutoff() ([]MediaItem, error) {
 	return wantedCutoff, nil
 }
 
-func (p *Radarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
+func (p *RadarrV2) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	// set request data
-	payload := RadarrMovieSearch{
-		Name:     "moviesSearch",
+	payload := RadarrV2MovieSearch{
+		Name:   "moviesSearch",
 		Movies: mediaItemIds,
 	}
 
 	// send request
 	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), 15, p.reqHeaders,
-		req.BodyJSON(&payload))
+		&pvrDefaultRetry, req.BodyJSON(&payload))
 	if err != nil {
 		return false, errors.WithMessage(err, "failed retrieving command api response from radarr")
 	}
@@ -345,7 +348,7 @@ func (p *Radarr) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	}
 
 	// decode response
-	var q RadarrCommandResponse
+	var q RadarrV2CommandResponse
 	if err := resp.ToJSON(&q); err != nil {
 		return false, errors.WithMessage(err, "failed decoding command api response from radarr")
 	}
