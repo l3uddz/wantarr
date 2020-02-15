@@ -22,10 +22,10 @@ type RadarrV3 struct {
 }
 
 type RadarrV3Movie struct {
-	Id          int
-	AirDateUtc  time.Time `json:"inCinemas"`
-	Status      string
-	Monitored   bool
+	Id         int
+	AirDateUtc time.Time `json:"inCinemas"`
+	Status     string
+	Monitored  bool
 }
 
 type RadarrV3SystemStatus struct {
@@ -371,6 +371,10 @@ func (p *RadarrV3) SearchMediaItems(mediaItemIds []int) (bool, error) {
 		// is status complete?
 		if searchStatus.Status == "completed" {
 			break
+		} else if searchStatus.Status == "failed" {
+			return false, fmt.Errorf("search failed with message: %q", searchStatus.Message)
+		} else if searchStatus.Status != "started" {
+			return false, fmt.Errorf("search failed with unexpected status %q, message: %q", searchStatus.Status, searchStatus.Message)
 		}
 
 		time.Sleep(10 * time.Second)

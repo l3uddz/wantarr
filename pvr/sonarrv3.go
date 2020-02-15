@@ -189,7 +189,7 @@ func (p *SonarrV3) GetWantedMissing() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey": "airDateUtc",
+		"sortKey":   "airDateUtc",
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
@@ -262,7 +262,7 @@ func (p *SonarrV3) GetWantedCutoff() ([]MediaItem, error) {
 
 	// set params
 	params := req.QueryParam{
-		"sortKey": "airDateUtc",
+		"sortKey":   "airDateUtc",
 		"pageSize":  pvrDefaultPageSize,
 		"monitored": "true",
 	}
@@ -370,6 +370,10 @@ func (p *SonarrV3) SearchMediaItems(mediaItemIds []int) (bool, error) {
 		// is status complete?
 		if searchStatus.Status == "completed" {
 			break
+		} else if searchStatus.Status == "failed" {
+			return false, fmt.Errorf("search failed with message: %q", searchStatus.Message)
+		} else if searchStatus.Status != "started" {
+			return false, fmt.Errorf("search failed with unexpected status %q, message: %q", searchStatus.Status, searchStatus.Message)
 		}
 
 		time.Sleep(10 * time.Second)

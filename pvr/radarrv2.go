@@ -371,6 +371,10 @@ func (p *RadarrV2) SearchMediaItems(mediaItemIds []int) (bool, error) {
 		// is status complete?
 		if searchStatus.Status == "completed" {
 			break
+		} else if searchStatus.Status == "failed" {
+			return false, fmt.Errorf("search failed with message: %q", searchStatus.Message)
+		} else if searchStatus.Status != "started" {
+			return false, fmt.Errorf("search failed with unexpected status %q, message: %q", searchStatus.Status, searchStatus.Message)
 		}
 
 		time.Sleep(10 * time.Second)
