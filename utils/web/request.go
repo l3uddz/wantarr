@@ -21,7 +21,7 @@ var (
 	log = logger.GetLogger("web")
 
 	// HTTP client
-	httpClient = &http.Client{
+	httpClient = http.Client{
 		Transport: &http.Transport{
 			Dial: (&net.Dialer{
 				Timeout: 10 * time.Second,
@@ -62,7 +62,7 @@ func GetResponse(method HTTPMethod, requestUrl string, timeout int, v ...interfa
 	req.SetJSONEscapeHTML(false)
 
 	inputs := make([]interface{}, 0)
-	inputs = append(inputs, client)
+	inputs = append(inputs, &client)
 
 	// Extract Retry struct, append everything else
 	var retry Retry
