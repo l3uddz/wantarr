@@ -42,11 +42,13 @@ const (
 	DELETE
 )
 
-/* Public */
+/* Private */
 
 func init() {
 	req.SetJSONEscapeHTML(false)
 }
+
+/* Public */
 
 func GetResponse(method HTTPMethod, requestUrl string, timeout int, v ...interface{}) (*req.Resp, error) {
 	// prepare request
