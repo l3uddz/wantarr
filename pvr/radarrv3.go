@@ -19,6 +19,7 @@ type RadarrV3 struct {
 	log        *logrus.Entry
 	apiUrl     string
 	reqHeaders req.Header
+	timeout    int
 }
 
 type RadarrV3Movie struct {
@@ -79,6 +80,7 @@ func NewRadarrV3(name string, c *config.Pvr) *RadarrV3 {
 		log:        logger.GetLogger(name),
 		apiUrl:     apiUrl,
 		reqHeaders: reqHeaders,
+		timeout:    pvrDefaultTimeout,
 	}
 }
 
@@ -86,7 +88,7 @@ func NewRadarrV3(name string, c *config.Pvr) *RadarrV3 {
 
 func (p *RadarrV3) getSystemStatus() (*RadarrV3SystemStatus, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), 15, p.reqHeaders,
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/system/status"), p.timeout, p.reqHeaders,
 		&pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving system status api response from radarr")
@@ -110,7 +112,7 @@ func (p *RadarrV3) getSystemStatus() (*RadarrV3SystemStatus, error) {
 
 func (p *RadarrV3) getCommandStatus(id int) (*RadarrV3CommandStatus, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), 15,
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, fmt.Sprintf("/command/%d", id)), p.timeout,
 		p.reqHeaders, &pvrDefaultRetry)
 	if err != nil {
 		return nil, errors.New("failed retrieving command status api response from radarr")
@@ -153,7 +155,7 @@ func (p *RadarrV3) Init() error {
 
 func (p *RadarrV3) GetQueueSize() (int, error) {
 	// send request
-	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), 15, p.reqHeaders,
+	resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/queue"), p.timeout, p.reqHeaders,
 		&pvrDefaultRetry)
 	if err != nil {
 		return 0, errors.WithMessage(err, "failed retrieving queue api response from radarr")
@@ -204,7 +206,7 @@ func (p *RadarrV3) GetWantedMissing() ([]MediaItem, error) {
 		params["page"] = page
 
 		// send request
-		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), 15,
+		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/missing"), p.timeout,
 			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted missing api response from radarr")
@@ -281,7 +283,7 @@ func (p *RadarrV3) GetWantedCutoff() ([]MediaItem, error) {
 		params["page"] = page
 
 		// send request
-		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), 15,
+		resp, err := web.GetResponse(web.GET, web.JoinURL(p.apiUrl, "/wanted/cutoff"), p.timeout,
 			p.reqHeaders, &pvrDefaultRetry, params)
 		if err != nil {
 			return nil, errors.WithMessage(err, "failed retrieving wanted cutotff unmet api response from radarr")
@@ -334,7 +336,7 @@ func (p *RadarrV3) SearchMediaItems(mediaItemIds []int) (bool, error) {
 	}
 
 	// send request
-	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), 15, p.reqHeaders,
+	resp, err := web.GetResponse(web.POST, web.JoinURL(p.apiUrl, "/command"), p.timeout, p.reqHeaders,
 		&pvrDefaultRetry, req.BodyJSON(&payload))
 	if err != nil {
 		return false, errors.WithMessage(err, "failed retrieving command api response from radarr")
