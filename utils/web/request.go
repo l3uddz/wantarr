@@ -44,13 +44,14 @@ const (
 
 /* Public */
 
+func init() {
+	req.SetJSONEscapeHTML(false)
+}
+
 func GetResponse(method HTTPMethod, requestUrl string, timeout int, v ...interface{}) (*req.Resp, error) {
 	// prepare request
-	req.SetJSONEscapeHTML(false)
-
 	inputs := make([]interface{}, 0)
 
-	// Extract Retry struct, append everything else
 	var retry Retry
 	for _, vv := range v {
 		switch vT := vv.(type) {
