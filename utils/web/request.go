@@ -48,7 +48,7 @@ func init() {
 	// dont json escape html
 	req.SetJSONEscapeHTML(false)
 
-	// use timeout from context
+	// use timeout from getresponse
 	httpClient.Timeout = time.Duration(0)
 }
 
