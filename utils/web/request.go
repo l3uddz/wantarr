@@ -1,7 +1,6 @@
 package web
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -17,7 +16,8 @@ import (
 
 var (
 	// Logging
-	log = logger.GetLogger("web")
+	log        = logger.GetLogger("web")
+	httpClient = *req.Client()
 )
 
 /* Structs */
@@ -47,35 +47,24 @@ const (
 func init() {
 	// dont json escape html
 	req.SetJSONEscapeHTML(false)
+
 	// use timeout from context
-	req.SetTimeout(0)
-}
-
-func getInputsWithTimeout(inputs []interface{}, timeout int) []interface{} {
-	// return existing inputs when no timeout provided
-	if timeout == 0 {
-		return inputs
-	}
-
-	// make copy of inputs to return
-	newInputs := make([]interface{}, 0)
-	for _, v := range inputs {
-		newInputs = append(newInputs, v)
-	}
-
-	// add timeout context
-	ctx, _ := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	newInputs = append(newInputs, ctx)
-
-	return newInputs
+	httpClient.Timeout = time.Duration(0)
 }
 
 /* Public */
 
 func GetResponse(method HTTPMethod, requestUrl string, timeout int, v ...interface{}) (*req.Resp, error) {
-	// prepare request
-	reqInputs := make([]interface{}, 0)
+	inputs := make([]interface{}, 0)
 
+	// prepare client
+	client := httpClient
+	if timeout > 0 {
+		client.Timeout = time.Duration(timeout) * time.Second
+	}
+	inputs = append(inputs, &client)
+
+	// prepare request
 	var retry Retry
 	for _, vv := range v {
 		switch vT := vv.(type) {
@@ -84,7 +73,7 @@ func GetResponse(method HTTPMethod, requestUrl string, timeout int, v ...interfa
 		case Retry:
 			retry = vT
 		default:
-			reqInputs = append(reqInputs, vT)
+			inputs = append(inputs, vT)
 		}
 	}
 
@@ -94,9 +83,6 @@ func GetResponse(method HTTPMethod, requestUrl string, timeout int, v ...interfa
 
 	// Exponential backoff
 	for {
-		// set inputs
-		inputs := getInputsWithTimeout(reqInputs, timeout)
-
 		// do request
 		switch method {
 		case GET:
