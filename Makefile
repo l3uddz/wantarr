@@ -30,7 +30,7 @@ test-all: test lint
 .PHONY: test
 test: ## Run tests
 	@echo "*** go test ***"
-	go test -cover -mod vendor -v -race ${GO_PACKAGES}
+	go test -cover -v -race ${GO_PACKAGES}
 
 .PHONY: lint
 lint: check_golangci ## Run linting
