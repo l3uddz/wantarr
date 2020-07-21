@@ -198,7 +198,7 @@ func (p *RadarrV3) GetWantedMissing() ([]MediaItem, error) {
 
 	for {
 		// break loop when all pages retrieved
-		if lastPageSize < pvrDefaultPageSize {
+		if lastPageSize == 0 {
 			break
 		}
 
@@ -275,7 +275,7 @@ func (p *RadarrV3) GetWantedCutoff() ([]MediaItem, error) {
 
 	for {
 		// break loop when all pages retrieved
-		if lastPageSize < pvrDefaultPageSize {
+		if lastPageSize == 0 {
 			break
 		}
 
