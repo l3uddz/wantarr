@@ -8,7 +8,7 @@ linters:
     - unconvert
 #    - unparam
     - scopelint
-    - dupl
+#    - dupl
     - interfacer
     - stylecheck
 
