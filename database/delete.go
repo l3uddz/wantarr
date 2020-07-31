@@ -7,7 +7,7 @@ import (
 
 func DeleteMissingItems(pvrName string, wantedType string, newMediaItems []pvr.MediaItem) (int, error) {
 	// build slice of new item ids
-	newItemIds := make(map[int]*string, 0)
+	newItemIds := make(map[int]*string)
 
 	for _, item := range newMediaItems {
 		newItemIds[item.ItemId] = nil
@@ -29,6 +29,8 @@ func DeleteMissingItems(pvrName string, wantedType string, newMediaItems []pvr.M
 
 	for _, item := range dbItems {
 		if _, ok := newItemIds[item.Id]; !ok {
+			item := item
+
 			// item no longer exists
 			if err := tx.Unscoped().Delete(&item).Error; err != nil {
 				tx.Rollback()

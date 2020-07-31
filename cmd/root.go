@@ -106,23 +106,23 @@ func initConfig() {
 /* Private Helpers */
 
 func parseValidateInputs(args []string) error {
-	var ok bool = false
-	var err error = nil
-
 	// validate pvr exists in config
 	pvrName = args[0]
 	lowerPvrName = strings.ToLower(pvrName)
-	pvrConfig, ok = config.Config.Pvr[pvrName]
+	pc, ok := config.Config.Pvr[pvrName]
 	if !ok {
 		return fmt.Errorf("no pvr configuration found for: %q", pvrName)
 	}
 
+	pvrConfig = pc
+
 	// init pvrObj
-	pvr, err = pvrObj.Get(pvrName, pvrConfig.Type, pvrConfig)
+	p, err := pvrObj.Get(pvrName, pvrConfig.Type, pvrConfig)
 	if err != nil {
 		return errors.WithMessage(err, "failed loading pvr object")
 	}
 
+	pvr = p
 	return nil
 }
 
@@ -148,7 +148,7 @@ func searchForItems(searchItems []pvrObj.MediaItem, wantedType string) (bool, er
 		return false, errors.New("failed unexpectedly searching for items")
 	} else {
 		// update search items lastsearch time
-		for pos, _ := range searchItems {
+		for pos := range searchItems {
 			(&searchItems[pos]).LastSearch = searchTime
 		}
 
