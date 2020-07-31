@@ -78,12 +78,27 @@ release: check_goreleaser fetch ## Generate a release, but don't publish
 	goreleaser --skip-validate --skip-publish --rm-dist
 
 .PHONY: publish
-publish: check_goreleaser fetch ## Generate a release, and publish
-	goreleaser --rm-dist
+publish: fetch ## Generate a release, and publish
+		docker run --rm --privileged \
+			-e GITHUB_TOKEN="${TOKEN}" \
+			-e VERSION="${GIT_TAG_NAME}" \
+			-e GIT_COMMIT="${GIT_COMMIT}" \
+			-e TIMESTAMP="${TIMESTAMP}" \
+			-v `pwd`:/go/src/github.com/l3uddz/wantarr \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			-w /go/src/github.com/l3uddz/wantarr \
+			neilotoole/xcgo:latest goreleaser --rm-dist
 
 .PHONY: snapshot
-snapshot: check_goreleaser fetch ## Generate a snapshot release
-	goreleaser --snapshot --skip-validate --skip-publish --rm-dist
+snapshot: fetch ## Generate a snapshot release
+	docker run --rm --privileged \
+		-e VERSION="${VERSION}" \
+		-e GIT_COMMIT="${GIT_COMMIT}" \
+		-e TIMESTAMP="${TIMESTAMP}" \
+		-v `pwd`:/go/src/github.com/l3uddz/wantarr \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-w /go/src/github.com/l3uddz/wantarr \
+		neilotoole/xcgo:latest goreleaser --snapshot --skip-validate --skip-publish --rm-dist
 
 .PHONY: help
 help:

@@ -1,0 +1,63 @@
+# https://goreleaser.com
+project_name: wantarr
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=1
+
+# Build
+builds:
+  - id: build_darwin
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w
+      - -X "github.com/l3uddz/wantarr/build.Version={{ .Version }}"
+      - -X "github.com/l3uddz/wantarr/build.GitCommit={{ .ShortCommit }}"
+      - -X "github.com/l3uddz/wantarr/build.Timestamp={{ .Timestamp }}"
+    flags:
+      - -trimpath
+
+  - id: build_linux
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
+      - -linkmode external
+      - -extldflags -static
+      - -s -w
+      - -X "github.com/l3uddz/wantarr/build.Version={{ .Version }}"
+      - -X "github.com/l3uddz/wantarr/build.GitCommit={{ .ShortCommit }}"
+      - -X "github.com/l3uddz/wantarr/build.Timestamp={{ .Timestamp }}"
+    flags:
+      - -trimpath
+      - -tags=netgo
+      - -v
+
+# Archive
+archives:
+  -
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: "binary"
+
+# Checksum
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha512
+
+# Snapshot
+snapshot:
+  name_template: "{{ .Major }}.{{ .Minor }}.{{ .Patch }}-dev+{{ .ShortCommit }}"
+
+# Changelog
+changelog:
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^Merge branch"
