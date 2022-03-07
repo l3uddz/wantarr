@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/imroc/req v0.3.0
+	github.com/imroc/req v0.3.2
 	github.com/jinzhu/gorm v1.9.15
 	github.com/jpillora/backoff v1.0.0
 	github.com/json-iterator/go v1.1.10
