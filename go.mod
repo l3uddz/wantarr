@@ -26,7 +26,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/tommysolsen/capitalise v0.0.0-20171110170156-1df6e863d8ab
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	go.uber.org/atomic v1.6.0
+	go.uber.org/atomic v1.11.0
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
 	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 	golang.org/x/text v0.3.3 // indirect
